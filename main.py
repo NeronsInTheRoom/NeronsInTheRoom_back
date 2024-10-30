@@ -4,6 +4,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from module.tts import generate_audio
 
+# 성우현
+from module.uh_q1 import hq1_evaluation
+
 app = FastAPI()
 
 app.add_middleware(
@@ -19,3 +22,7 @@ app.add_middleware(
 # async def create_audio(text: str, filename: str):
 #     result = generate_audio(text=text, filename=filename)
 #     return result
+
+@app.post("/hq1")
+async def hq1(age: str=Form(...), answer: str=Form(...)):
+    return  hq1_evaluation(age, answer)
