@@ -1,4 +1,4 @@
-async def Q5_score(text: str, example: str):
+async def Q5_score(text: str, correctAnswer: str):
     
     class NumberSimilarityChecker:
         # 숫자별 한글 발음 매핑 (한글로 말한 경우도 처리)
@@ -47,36 +47,23 @@ async def Q5_score(text: str, example: str):
             if norm1 == norm2:  # 완전 일치
                 return 1.0
                 
-            # 부분 점수 계산
-            score = 0.0
-            min_len = min(len(norm1), len(norm2))
-            
-            # 각 자리수별로 비교
-            for i in range(min_len):
-                if norm1[i] == norm2[i]:
-                    score += 1.0
-            
-            # 전체 자리수로 나누어 정규화
-            max_len = max(len(norm1), len(norm2))
-            final_score = score / max_len
-            
-            # 순서가 뒤바뀐 경우 추가 체크
-            if final_score == 0 and len(norm1) == len(norm2) == 2:
-                if norm1[0] == norm2[1] and norm1[1] == norm2[0]:
-                    final_score = 0.5  # 순서가 바뀐 경우 50% 점수
-            
-            return final_score
+            # 순서가 뒤바뀐 경우나 부분 일치는 모두 0 반환
+            return 0.0
 
     try:
         # 점수 계산
         checker = NumberSimilarityChecker()
-        score = checker.calculate_similarity(text, example)
+        similarity_score = checker.calculate_similarity(text, correctAnswer)
+        
+        # 완전 일치(100%)인 경우 1, 그 외에는 0 반환
+        final_score = 1 if similarity_score == 1.0 else 0
         
         # 디버깅 정보 출력
-        print(f"Final score: {score * 100:.1f}%")
+        print(f"Similarity score: {similarity_score * 100:.1f}%")
+        print(f"Final score: {final_score}")
         
-        return score
+        return final_score
         
     except Exception as e:
         print(f"Error in Q5_score: {str(e)}")
-        return 0.0
+        return 0
