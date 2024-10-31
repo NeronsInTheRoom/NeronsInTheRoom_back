@@ -11,7 +11,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 허용할 도메인
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,44 +30,39 @@ async def get_questions():
 @app.post("/Q5-1")
 async def speech_to_text(file: UploadFile = File(...)):
     
-    # 파일 확장자 확인
     if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
         raise HTTPException(
             status_code=400,
             detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
         )
     
-    # 파일 컨텐츠 읽기
     contents = await file.read()
         
-    # STT 처리
     text = await transcribe_audio(contents)
-
     correctAnswer = "93"
-
     score = await Q5_score(text, correctAnswer)
         
-    return {"score" : score}
-
+    return {
+        "score": score,
+        "answer": text  
+    }
 
 @app.post("/Q5-2")
 async def speech_to_text(file: UploadFile = File(...)):
     
-    # 파일 확장자 확인
     if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
         raise HTTPException(
             status_code=400,
             detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
         )
     
-    # 파일 컨텐츠 읽기
     contents = await file.read()
         
-    # STT 처리
     text = await transcribe_audio(contents)
-
     correctAnswer = "86"
-
     score = await Q5_score(text, correctAnswer)
         
-    return {"score" : score}
+    return {
+        "score": score,
+        "answer": text  
+    }
