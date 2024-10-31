@@ -7,6 +7,8 @@ from stt import transcribe_audio
 from data import questions
 from Q5 import Q5_score
 from module.tts import generate_audio
+from data import explanations
+from data import scores
 
 # 성우현
 from module.uh_q1 import hq1_evaluation
@@ -75,7 +77,7 @@ async def speech_to_text(file: UploadFile = File(...)):
   
 # 사용시에만 주석제거
 # @app.post("/tts")
-# async def create_audio(text: str, filename: str):
+# async def generate_audio(text: str, filename: str):
 #     result = generate_audio(text=text, filename=filename)
 #     return result
 
@@ -90,3 +92,10 @@ async def hq2(answer: str=Form(...)):
 @app.post("/hq9")
 async def hq9(answer: str=Form(...)):
     return hq9_evaluation(answer)
+  
+# 데이터 전달
+@app.get("/get_explanations")
+async def get_explanations(): return explanations
+
+@app.get("/get_scores")
+async def get_scores(): return scores
