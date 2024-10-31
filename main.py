@@ -13,6 +13,7 @@ from data import scores
 # 성우현
 from module.uh_q1 import hq1_evaluation
 from module.uh_q2 import hq2_evaluation
+from module.uh_q9 import hq9_evaluation
 
 app = FastAPI()
 
@@ -88,6 +89,10 @@ async def hq1(age: str=Form(...), answer: str=Form(...)):
 async def hq2(answer: str=Form(...)):
     return hq2_evaluation(answer)
 
+@app.post("/hq9")
+async def hq9(answer: str=Form(...)):
+    return hq9_evaluation(answer)
+  
 # 데이터 전달
 @app.get("/get_explanations")
 async def get_explanations(): return explanations
