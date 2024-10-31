@@ -6,6 +6,11 @@ from fastapi.responses import JSONResponse
 from stt import transcribe_audio
 from data import questions
 from Q5 import Q5_score
+from module.tts import generate_audio
+
+# 성우현
+from module.uh_q1 import hq1_evaluation
+from module.uh_q2 import hq2_evaluation
 
 app = FastAPI()
 
@@ -66,3 +71,17 @@ async def speech_to_text(file: UploadFile = File(...)):
         "score": score,
         "answer": text  
     }
+  
+# 사용시에만 주석제거
+# @app.post("/tts")
+# async def create_audio(text: str, filename: str):
+#     result = generate_audio(text=text, filename=filename)
+#     return result
+
+@app.post("/hq1")
+async def hq1(age: str=Form(...), answer: str=Form(...)):
+    return  hq1_evaluation(age, answer)
+
+@app.post("/hq2")
+async def hq2(answer: str=Form(...)):
+    return hq2_evaluation(answer)
