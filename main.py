@@ -7,6 +7,7 @@ from module.tts import generate_audio
 # 성우현
 from module.uh_q1 import hq1_evaluation
 from module.uh_q2 import hq2_evaluation
+from module.uh_q9 import hq9_evaluation
 
 app = FastAPI()
 
@@ -31,3 +32,7 @@ async def hq1(age: str=Form(...), answer: str=Form(...)):
 @app.post("/hq2")
 async def hq2(answer: str=Form(...)):
     return hq2_evaluation(answer)
+
+@app.post("/hq9")
+async def hq9(answer: str=Form(...)):
+    return hq9_evaluation(answer)
