@@ -3,7 +3,7 @@ from transformers import AutoTokenizer, AutoModelForTokenClassification, pipelin
 import torch
 import json
 
-device = torch.device("mps" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
 model = AutoModelForCausalLM.from_pretrained(
     "Qwen/Qwen2-0.5B-Instruct",
@@ -22,7 +22,7 @@ object_list = {
     "item5": "동전"
 }
 
-def hq8_evaluation(answer):
+def q8_qwen2_evaluation(answer):
     
     # # NER 모델과 토크나이저 로드
     # model_name = "KoichiYasuoka/roberta-large-korean-upos"

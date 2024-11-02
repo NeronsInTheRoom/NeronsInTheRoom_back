@@ -18,7 +18,7 @@ if gpt_model is None:
 # OpenAI 클라이언트 초기화 및 API 키 등록
 client = OpenAI(api_key=api_key)
 
-def hq9_evaluation(answer):
+def q9_evaluation(answer):
         
     system_prompt = f"""
     # Role
