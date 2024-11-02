@@ -14,7 +14,7 @@ model = AutoModelForCausalLM.from_pretrained(
 
 tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2-0.5B-Instruct")
 
-def hq3_evaluation(location, answer):
+def hq3_ner_evaluation(location, answer):
     
     # 시간 기록 시작 (5초)
     start_time = time.time()
