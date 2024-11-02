@@ -82,10 +82,10 @@ async def speech_to_text(file: UploadFile = File(...)):
     }
   
 # 사용시에만 주석제거
-@app.post("/tts")
-async def generate_audio(text: str, filename: str):
-    result = generate_audio(text=text, filename=filename)
-    return result
+# @app.post("/tts")
+# async def generate_audio(text: str, filename: str):
+#     result = generate_audio(text=text, filename=filename)
+#     return result
 
 @app.post("/Q1")
 async def speech_to_text(birth_year: str=Form(...), file: UploadFile = File(...)):
