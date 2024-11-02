@@ -1,8 +1,6 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
+from dotenv import load_dotenv
 from openai import OpenAI
 import os
-from dotenv import load_dotenv
 import json
 
 load_dotenv()
@@ -19,16 +17,6 @@ if gpt_model is None:
 
 # OpenAI 클라이언트 초기화 및 API 키 등록
 client = OpenAI(api_key=api_key)
-
-# device = torch.device("mps" if torch.cuda.is_available() else "cpu")
-
-# model = AutoModelForCausalLM.from_pretrained(
-#     "Qwen/Qwen2-0.5B-Instruct",
-#     torch_dtype="auto",
-#     device_map="auto"
-# ).to(device)
-
-# tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2-0.5B-Instruct")
 
 def hq9_evaluation(answer):
         
@@ -54,30 +42,6 @@ def hq9_evaluation(answer):
         "vegetable_list": []
     }}
     """
-
-    # messages = [
-    #     {"role": "system", "content": system_prompt},
-    #     {"role": "user", "content": answer}
-    # ]
-    
-    # text = tokenizer.apply_chat_template(
-    #     messages,
-    #     tokenize=False,
-    #     add_generation_prompt=True
-    # )
-    
-    # model_inputs = tokenizer([text], return_tensors="pt")
-
-    # generated_ids = model.generate(
-    #     model_inputs.input_ids,
-    #     max_new_tokens=512
-    # )
-
-    # generated_ids = [
-    #     output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
-    # ]
-    
-    # return tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
     
     # API 호출
     completion = client.chat.completions.create(

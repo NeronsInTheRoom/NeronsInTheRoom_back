@@ -11,6 +11,9 @@ from module.tts import generate_audio
 # 성우현
 from module.uh_q1 import hq1_evaluation
 from module.uh_q2 import hq2_evaluation
+from module.uh_q3 import hq3_evaluation
+from module.uh_q3_1 import hq3_1_evaluation
+from module.uh_q8 import hq8_evaluation
 from module.uh_q9 import hq9_evaluation
 
 app = FastAPI()
@@ -81,11 +84,23 @@ async def speech_to_text(file: UploadFile = File(...)):
 
 @app.post("/hq1")
 async def hq1(age: str=Form(...), answer: str=Form(...)):
-    return  hq1_evaluation(age, answer)
+    return hq1_evaluation(age, answer)
 
 @app.post("/hq2")
 async def hq2(answer: str=Form(...)):
     return hq2_evaluation(answer)
+
+@app.post("/hq3")
+async def hq3(location: str=Form(...), answer: str=Form(...)):
+    return hq3_evaluation(location, answer)
+
+@app.post("/hq3_1")
+async def hq3_1(location: str=Form(...), answer: str=Form(...)):
+    return hq3_1_evaluation(location, answer)
+
+@app.post("/hq8")
+async def hq8(answer: str=Form(...)):
+    return hq8_evaluation(answer)
 
 @app.post("/hq9")
 async def hq9(answer: str=Form(...)):
