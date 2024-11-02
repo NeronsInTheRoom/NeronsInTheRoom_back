@@ -88,7 +88,7 @@ async def speech_to_text(file: UploadFile = File(...)):
 #     return result
 
 @app.post("/Q1")
-async def speech_to_text(birth_year: str=Form(...), file: UploadFile = File(...)):
+async def speech_to_text(birth_date: str=Form(...), file: UploadFile = File(...)):
     
     if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
         raise HTTPException(
@@ -100,7 +100,7 @@ async def speech_to_text(birth_year: str=Form(...), file: UploadFile = File(...)
         
     text = await transcribe_audio(contents)
     
-    score = await q1_evaluation(birth_year, text)
+    score = await q1_evaluation(birth_date, text)
     
     return {
         "score": score,
