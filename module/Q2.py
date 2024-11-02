@@ -2,7 +2,7 @@ from transformers import AutoTokenizer, AutoModelForTokenClassification, pipelin
 import datetime
 import re
 
-def hq2_evaluation(answer):
+def q2_evaluation(answer):
     
     # NER 모델과 토크나이저 로드
     model_name = "KoichiYasuoka/roberta-large-korean-upos"

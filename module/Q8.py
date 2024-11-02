@@ -18,26 +18,36 @@ if gpt_model is None:
 # OpenAI 클라이언트 초기화 및 API 키 등록
 client = OpenAI(api_key=api_key)
 
-def hq3_gpt_evaluation(location, answer):
+# 미리 정의된 객체 리스트
+object_list = {
+    "item1": "시계",
+    "item2": "열쇠",
+    "item3": "도장",
+    "item4": "연필",
+    "item5": "동전"
+}
+
+def q8_evaluation(answer):
     
     system_prompt = f"""
     
     # Role
-    - You are an expert location comparer.
+    You are a language model that identifies individual Korean words within a continuous string of text.
 
     # Task
-    - First, the user's actual location: "{location}".
-    - Second, the location answered by the user: "{answer}".
-    - Third, determine if "{answer}" is a plausible description or location within "{location}" (e.g., "치료받는 곳" is within "병원").
-    - Fourth, if "{answer}" is related to or within "{location}", assign a score of 2 in JSON format. If not, assign a score of 0.
+    Given a single string of Korean object names written together without spaces, separate each word and list them separated by commas.
+    
+    # Policy
+    - Responses must be in Korean only, without any Chinese characters or mixed languages.
+    - Provide the list of identified vegetables in the following JSON array format
     
     # Output
     {{
-        "score":
+        "answer_list": []
     }}
     """
     
-        # API 호출
+    # API 호출
     completion = client.chat.completions.create(
         model=gpt_model,
         messages=[
@@ -56,4 +66,7 @@ def hq3_gpt_evaluation(location, answer):
         print("응답이 JSON 형식이 아닙니다. 응답 내용:", response_content)
         return None
     
-    return result
+    # 점수 계산
+    score = sum(1 for answer in result["answer_list"] if answer in object_list.values())
+   
+    return {"score": score}

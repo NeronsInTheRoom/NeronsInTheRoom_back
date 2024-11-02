@@ -11,12 +11,15 @@ from data import explanations
 from data import scores
 
 # 성우현
-from module.uh_q1 import hq1_evaluation
-from module.uh_q2 import hq2_evaluation
-from module.uh_q3 import hq3_ner_evaluation
-from module.uh_q3_1 import hq3_gpt_evaluation
-from module.uh_q8 import hq8_evaluation
-from module.uh_q9 import hq9_evaluation
+from module.Q1 import q1_evaluation
+from module.Q2 import q2_evaluation
+from module.Q3_qwen2 import hq3_qwen2_evaluation
+from module.Q3 import q3_evaluation
+from module.Q3_1 import q3_1_evaluation
+from module.Q8 import q8_evaluation
+from module.Q8_qwen2 import q8_qwen2_evaluation
+from module.Q9 import q9_evaluation
+import asyncio
 
 app = FastAPI()
 
@@ -79,35 +82,153 @@ async def speech_to_text(file: UploadFile = File(...)):
     }
   
 # 사용시에만 주석제거
-# @app.post("/tts")
-# async def generate_audio(text: str, filename: str):
-#     result = generate_audio(text=text, filename=filename)
-#     return result
+@app.post("/tts")
+async def generate_audio(text: str, filename: str):
+    result = generate_audio(text=text, filename=filename)
+    return result
 
-@app.post("/hq1")
-async def hq1(age: str=Form(...), answer: str=Form(...)):
-    return hq1_evaluation(age, answer)
+@app.post("/Q1")
+async def speech_to_text(birth_year: str=Form(...), file: UploadFile = File(...)):
+    
+    if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
+        raise HTTPException(
+            status_code=400,
+            detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
+        )
+    
+    contents = await file.read()
+        
+    text = await transcribe_audio(contents)
+    
+    score = await q1_evaluation(birth_year, text)
+    
+    return {
+        "score": score,
+        "answer": text  
+    }
 
-@app.post("/hq2")
-async def hq2(answer: str=Form(...)):
-    return hq2_evaluation(answer)
+@app.post("/Q2")
+async def speech_to_text(file: UploadFile = File(...)):
+    
+    if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
+        raise HTTPException(
+            status_code=400,
+            detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
+        )
+    
+    contents = await file.read()
+        
+    text = await transcribe_audio(contents)
+    
+    score = await q2_evaluation(text)
+    
+    return {
+        "score": score,
+        "answer": text  
+    }
 
-@app.post("/hq3_ner")
-async def hq3(location: str=Form(...), answer: str=Form(...)):
-    return hq3_ner_evaluation(location, answer)
+@app.post("/Q3")
+async def speech_to_text(location: str=Form(...), file: UploadFile = File(...)):
+    
+    if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
+        raise HTTPException(
+            status_code=400,
+            detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
+        )
+    
+    contents = await file.read()
+        
+    text = await transcribe_audio(contents)
+    
+    try:
+        # 5초 내에 q3_evaluation 함수 호출
+        score = await asyncio.wait_for(q3_evaluation(location, text), timeout=5)
+        # score가 -1인 경우 Q3-1로 리디렉션 ("모르겠다"와 같은 의미)
+        if score == -1:
+            response = await speech_to_text_alternate(location, file)
+    except asyncio.TimeoutError:
+        # 5초 초과 시 Q3-1로 리디렉션
+        response = await speech_to_text_alternate(location, file)
+        return response
+    
+    return {
+        "score": score,
+        "answer": text  
+    }
 
-@app.post("/hq3_gpt")
-async def hq3_1(location: str=Form(...), answer: str=Form(...)):
-    return hq3_gpt_evaluation(location, answer)
+@app.post("/Q3-1")
+async def speech_to_text_alternate(location: str=Form(...), file: UploadFile = File(...)):    
+    contents = await file.read()
+        
+    text = await transcribe_audio(contents)
+    
+    score = await q3_1_evaluation(location, text)
+    
+    return {
+        "score": score,
+        "answer": text  
+    }
 
-@app.post("/hq8")
-async def hq8(answer: str=Form(...)):
-    return hq8_evaluation(answer)
+@app.post("/Q8")
+async def speech_to_text(file: UploadFile = File(...)):
+    
+    if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
+        raise HTTPException(
+            status_code=400,
+            detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
+        )
+    
+    contents = await file.read()
+        
+    text = await transcribe_audio(contents)
+    
+    score = await q8_evaluation(text)
+    
+    return {
+        "score": score,
+        "answer": text  
+    }
 
-@app.post("/hq9")
-async def hq9(answer: str=Form(...)):
-    return hq9_evaluation(answer)
-  
+@app.post("/Q9")
+async def speech_to_text(file: UploadFile = File(...)):
+    
+    if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
+        raise HTTPException(
+            status_code=400,
+            detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
+        )
+    
+    contents = await file.read()
+        
+    text = await transcribe_audio(contents)
+    
+    score = await q9_evaluation(text)
+    
+    return {
+        "score": score,
+        "answer": text  
+    }
+
+# @app.post("/Q1")
+# async def q1(age: str=Form(...), answer: str=Form(...)):
+#     return q1_evaluation(age, answer)
+
+# @app.post("/Q2")
+# async def q2(answer: str=Form(...)):
+#     return q2_evaluation(answer)
+
+# @app.post("/Q3")
+# async def q3(location: str=Form(...), answer: str=Form(...)):
+#     return q3_evaluation(location, answer)
+
+# @app.post("/Q8")
+# async def q8(answer: str=Form(...)):
+#     return q8_evaluation(answer)
+
+# @app.post("/Q9")
+# async def q9(answer: str=Form(...)):
+#     return q9_evaluation(answer)
+ 
 # 데이터 전달
 @app.get("/get_explanations")
 async def get_explanations(): return explanations
