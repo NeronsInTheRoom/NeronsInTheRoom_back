@@ -92,11 +92,11 @@ async def hq1(age: str=Form(...), answer: str=Form(...)):
 async def hq2(answer: str=Form(...)):
     return hq2_evaluation(answer)
 
-@app.post("/hq3")
+@app.post("/hq3_ner")
 async def hq3(location: str=Form(...), answer: str=Form(...)):
     return hq3_ner_evaluation(location, answer)
 
-@app.post("/hq3_1")
+@app.post("/hq3_gpt")
 async def hq3_1(location: str=Form(...), answer: str=Form(...)):
     return hq3_gpt_evaluation(location, answer)
 
