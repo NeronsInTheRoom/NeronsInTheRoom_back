@@ -6,8 +6,8 @@ from fastapi.responses import JSONResponse
 from stt import transcribe_audio
 from data import questions
 from data import answers
-from Q5 import Q5_score
-from Q6 import Q6_score
+from Q4andQ7 import Q4AndQ7Score
+from Q5andQ6 import Q5AndQ6Score
 # from module.tts import generate_audio
 from data import explanations
 from data import scores
@@ -36,86 +36,111 @@ async def get_questions():
             status_code=500,
             detail=f"질문 목록을 가져오는 중 오류가 발생했습니다: {str(e)}"
         )
+    
+# Q4, Q7 스코어 계산
+async def Q4andQ7(file: UploadFile, correctAnswer: str):
+
+    if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
+        raise HTTPException(
+            status_code=400,
+            detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
+        )
+    
+    contents = await file.read()
+        
+    text = await transcribe_audio(contents)
+    correctAnswer = correctAnswer
+    score = await Q4AndQ7Score(text, correctAnswer)
+        
+    return {
+        "score": score,
+        "answer": text  
+    }
+
+# Q5, Q6 스코어 계산
+async def Q5andQ6(file: UploadFile, correctAnswer: str):
+    
+    if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
+        raise HTTPException(
+            status_code=400,
+            detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
+        )
+    
+    contents = await file.read()
+        
+    text = await transcribe_audio(contents)
+    correctAnswer = correctAnswer
+    score = await Q5AndQ6Score(text, correctAnswer)
+        
+    return {
+        "score": score,
+        "answer": text  
+    }
+    
+@app.post("/Q4")
+async def speech_to_text_q4(
+    file: UploadFile = File(...), 
+    correctAnswer: str = Form(...)
+):
+    return await Q4andQ7(file, correctAnswer)
+
 
 @app.post("/Q5")
-async def speech_to_text(file: UploadFile = File(...), correctAnswer: str = Form(...)):
+async def speech_to_text_q5(
+    file: UploadFile = File(...), 
+    correctAnswer: str = Form(...)
+):
+    return await Q5andQ6(file, correctAnswer)
     
-    if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
-        raise HTTPException(
-            status_code=400,
-            detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
-        )
-    
-    contents = await file.read()
-        
-    text = await transcribe_audio(contents)
-    correctAnswer = correctAnswer
-    score = await Q5_score(text, correctAnswer)
-        
-    return {
-        "score": score,
-        "answer": text  
-    }
 
 @app.post("/Q5-1")
-async def speech_to_text(file: UploadFile = File(...), correctAnswer: str = Form(...)):
-    
-    if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
-        raise HTTPException(
-            status_code=400,
-            detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
-        )
-    
-    contents = await file.read()
-        
-    text = await transcribe_audio(contents)
-    correctAnswer = correctAnswer
-    score = await Q5_score(text, correctAnswer)
-        
-    return {
-        "score": score,
-        "answer": text  
-    }
+async def speech_to_text_q5(
+    file: UploadFile = File(...), 
+    correctAnswer: str = Form(...)
+):
+    return await Q5andQ6(file, correctAnswer)
 
 @app.post("/Q6")
-async def speech_to_text(file: UploadFile = File(...), correctAnswer: str = Form(...)):
-
-    if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
-        raise HTTPException(
-            status_code=400,
-            detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
-        )
-    
-    contents = await file.read()
-        
-    text = await transcribe_audio(contents)
-    correctAnswer = correctAnswer
-    score = await Q6_score(text, correctAnswer)
-
-    return {
-        "score": score,
-        "answer": text  
-    }
+async def speech_to_text_q5(
+    file: UploadFile = File(...), 
+    correctAnswer: str = Form(...)
+):
+    return await Q5andQ6(file, correctAnswer)
 
 @app.post("/Q6-1")
-async def speech_to_text(file: UploadFile = File(...), correctAnswer: str = Form(...)):
+async def speech_to_text_q5(
+    file: UploadFile = File(...), 
+    correctAnswer: str = Form(...)
+):
+    return await Q5andQ6(file, correctAnswer)
 
-    if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
-        raise HTTPException(
-            status_code=400,
-            detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
-        )
-    
-    contents = await file.read()
-        
-    text = await transcribe_audio(contents)
-    correctAnswer = correctAnswer
-    score = await Q6_score(text, correctAnswer)
+@app.post("/Q7")
+async def speech_to_text_q7(
+    file: UploadFile = File(...), 
+    correctAnswer: str = Form(...)
+):
+    return await Q4andQ7(file, correctAnswer)
 
-    return {
-        "score": score,
-        "answer": text  
-    }
+@app.post("/Q7-1")
+async def speech_to_text_q7(
+    file: UploadFile = File(...), 
+    correctAnswer: str = Form(...)
+):
+    return await Q4andQ7(file, correctAnswer)
+
+@app.post("/Q7-2")
+async def speech_to_text_q7(
+    file: UploadFile = File(...), 
+    correctAnswer: str = Form(...)
+):
+    return await Q4andQ7(file, correctAnswer)
+
+@app.post("/Q7-3")
+async def speech_to_text_q7(
+    file: UploadFile = File(...), 
+    correctAnswer: str = Form(...)
+):
+    return await Q4andQ7(file, correctAnswer)
 
 # 사용시에만 주석제거
 # @app.post("/tts")
