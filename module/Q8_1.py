@@ -18,28 +18,21 @@ if gpt_model is None:
 # OpenAI 클라이언트 초기화 및 API 키 등록
 client = OpenAI(api_key=api_key)
 
-async def q9_evaluation(answer):
-        
+async def q8_1_evaluation(answer):
+    
     system_prompt = f"""
+    
     # Role
-    - You are a professional vegetable identifier who identifies vegetables.
+    - You are a language model that evaluates Korean object names mentioned in a response against a predefined list of objects.
 
     # Task
-    - Given a single string of vegetable names without spaces, separate and identify each vegetable name.
-    - The identified vegetables are actually Check if the vegetables are present.
-    
-    # Policy
-    - Responses must be in Korean only, without any Chinese characters or mixed languages.
-    - Provide the list of identified vegetables in the following JSON array format
-    
-    # Output Example
-    {{
-        "vegetable_list": ["채소1", "채소2", "채소3"...]
-    }}
+    - First, if you have a single string of Korean object names written together without spaces, separate each word.
+    - Second, if words with the same meaning, such as "clock", "coin", "key", "pencil", and "stamp", are listed in an array.
+    - Lists separated words in JSON array format.
     
     # Output
     {{
-        "vegetable_list": []
+        "answer_list": []
     }}
     """
     
@@ -54,22 +47,28 @@ async def q9_evaluation(answer):
     )
 
     response_content = completion.choices[0].message.content
-    result = json.loads(response_content)
-
+    
+    try:
+        # 결과를 JSON 형식으로 로드하여 반환
+        result = json.loads(response_content)
+    except json.JSONDecodeError:
+        print("응답이 JSON 형식이 아닙니다. 응답 내용:", response_content)
+        return None
+    
     # 질문 생성 성공
-    vegetable_list = result["vegetable_list"]
-    num_vegetables = len(vegetable_list)
+    answers = result["answer_list"]
+    num_answer = len(answers)
 
     # 점수 부여 기준에 따라 점수 계산
-    if num_vegetables >= 10:
+    if num_answer >= 5:
         score = 5
-    elif num_vegetables == 9:
+    elif num_answer == 4:
         score = 4
-    elif num_vegetables == 8:
+    elif num_answer == 3:
         score = 3
-    elif num_vegetables == 7:
+    elif num_answer == 2:
         score = 2
-    elif num_vegetables == 6:
+    elif num_answer == 1:
         score = 1
     else:
         score = 0

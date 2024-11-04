@@ -18,32 +18,22 @@ if gpt_model is None:
 # OpenAI 클라이언트 초기화 및 API 키 등록
 client = OpenAI(api_key=api_key)
 
-# 미리 정의된 객체 리스트
-object_list = {
-    "item1": "시계",
-    "item2": "열쇠",
-    "item3": "도장",
-    "item4": "연필",
-    "item5": "동전"
-}
-
-def q8_evaluation(answer):
+async def q8_evaluation(image_name, answer):
     
     system_prompt = f"""
     
     # Role
-    You are a language model that identifies individual Korean words within a continuous string of text.
-
-    # Task
-    Given a single string of Korean object names written together without spaces, separate each word and list them separated by commas.
+    - You are an expert in identifying objects and determining if a given description accurately matches the object.
     
-    # Policy
-    - Responses must be in Korean only, without any Chinese characters or mixed languages.
-    - Provide the list of identified vegetables in the following JSON array format
+    # Task
+    - First, here is the image object {image_name} that the user asked a question about.
+    - Second, the following is an answer {answer} based on the user's question.
+    - Third, compare {image_name} and {answer} to evaluate whether they match.
+    - Fourth, if “{answer}” is similar to “{image_name}”, 1 point is given in JSON format. If there is no match, 0 points are given.
     
     # Output
     {{
-        "answer_list": []
+        "score":
     }}
     """
     
@@ -66,7 +56,4 @@ def q8_evaluation(answer):
         print("응답이 JSON 형식이 아닙니다. 응답 내용:", response_content)
         return None
     
-    # 점수 계산
-    score = sum(1 for answer in result["answer_list"] if answer in object_list.values())
-   
-    return {"score": score}
+    return result['score']
