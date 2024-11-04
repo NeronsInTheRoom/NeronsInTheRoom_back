@@ -143,18 +143,25 @@ async def speech_to_text(location: str=Form(...), file: UploadFile = File(...)):
     try:
         # 5초 내에 q3_evaluation 함수 호출
         score = await asyncio.wait_for(q3_evaluation(location, text), timeout=5)
-        # score가 -1인 경우 Q3-1로 리디렉션 ("모르겠다"와 같은 의미)
-        if score == -1:
-            response = await speech_to_text_alternate(location, file)
+        
+        # 점수가 0일 경우 Q3-1의 결과를 추가로 호출하여 반환
+        if score == 0:
+            q3_1_result = await speech_to_text_alternate(location, file)
+            return {
+                "score": q3_1_result["score"],
+                "answer": q3_1_result["answer"]
+            }
+        
+        # 점수가 2일 경우 기본 Q3의 결과만 반환
+        return {
+            "score": score,
+            "answer": text  
+        }
+    
     except asyncio.TimeoutError:
         # 5초 초과 시 Q3-1로 리디렉션
         response = await speech_to_text_alternate(location, file)
         return response
-    
-    return {
-        "score": score,
-        "answer": text  
-    }
 
 @app.post("/Q3-1")
 async def speech_to_text_alternate(location: str=Form(...), file: UploadFile = File(...)):    
@@ -217,10 +224,41 @@ async def speech_to_text(file: UploadFile = File(...)):
 # async def q2(answer: str=Form(...)):
 #     return q2_evaluation(answer)
 
-# @app.post("/Q3")
-# async def q3(location: str=Form(...), answer: str=Form(...)):
-#     return q3_evaluation(location, answer)
+# @app.post("/testQ3")
+# async def speech_to_text(location: str=Form(...), answer: str=Form(...)):
+#     try:
+#         # 5초 내에 q3_evaluation 함수 호출
+#         score = await asyncio.wait_for(q3_evaluation(location, answer), timeout=5)
+        
+#         # 점수가 0일 경우에만 Q3-1의 결과를 추가로 호출하여 업데이트
+#         if score == 0:
+#             q3_1_result = await test_speech_to_text_alternate(location, answer)
+#             return {
+#                 "score": q3_1_result.get("score", 0),
+#                 "answer": q3_1_result.get("answer", answer)
+#             }
+        
+#         # 점수가 2일 경우는 기본 Q3의 결과만 반환
+#         return {
+#             "score": score,
+#             "answer": answer  
+#         }
+    
+#     except asyncio.TimeoutError:
+#         # 5초 초과 시 Q3-1로 리디렉션
+#         response = await test_speech_to_text_alternate(location, answer)
+#         return response
 
+# @app.post("/testQ3-1")
+# async def test_speech_to_text_alternate(location: str=Form(...), answer: str=Form(...)):
+    
+#     score = await q3_1_evaluation(location, answer)
+    
+#     return {
+#         "score": score,
+#         "answer": answer  
+#     }
+    
 # @app.post("/Q8")
 # async def q8(answer: str=Form(...)):
 #     return q8_evaluation(answer)
