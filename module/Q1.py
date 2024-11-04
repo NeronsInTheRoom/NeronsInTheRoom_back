@@ -65,4 +65,4 @@ async def q1_evaluation(birth_date, answer):
     print(f"절대값: {difference}")
     res_abs = 1 if difference <= 2 else 0
     
-    return {"score": res_abs, "answer": answer_num}
+    return res_abs
