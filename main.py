@@ -218,10 +218,6 @@ async def speech_to_text(file: UploadFile = File(...)):
         "answer": text  
     }
 
-# @app.post("/Q2")
-# async def q2(answer: str=Form(...)):
-#     return q2_evaluation(answer)
-
 # @app.post("/testQ3")
 # async def speech_to_text(location: str=Form(...), answer: str=Form(...)):
 #     try:
