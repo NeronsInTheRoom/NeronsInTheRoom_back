@@ -1,4 +1,4 @@
-async def Q5_score(text: str, correctAnswer: str):
+async def Q5AndQ6Score(text: str, correctAnswer: str):
     
     class NumberSimilarityChecker:
         # 숫자별 한글 발음 매핑 (한글로 말한 경우도 처리)
