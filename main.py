@@ -20,6 +20,7 @@ from module.Q8 import q8_evaluation
 from module.Q8_qwen2 import q8_qwen2_evaluation
 from module.Q9 import q9_evaluation
 import asyncio
+import os
 
 app = FastAPI()
 
@@ -99,6 +100,7 @@ async def speech_to_text(birth_date: str=Form(...), file: UploadFile = File(...)
     contents = await file.read()
         
     text = await transcribe_audio(contents)
+    print(f"값 확인: {text}")
     
     score = await q1_evaluation(birth_date, text)
     
@@ -216,10 +218,6 @@ async def speech_to_text(file: UploadFile = File(...)):
         "answer": text  
     }
 
-# @app.post("/Q1")
-# async def q1(age: str=Form(...), answer: str=Form(...)):
-#     return q1_evaluation(age, answer)
-
 # @app.post("/Q2")
 # async def q2(answer: str=Form(...)):
 #     return q2_evaluation(answer)
@@ -266,6 +264,17 @@ async def speech_to_text(file: UploadFile = File(...)):
 # @app.post("/Q9")
 # async def q9(answer: str=Form(...)):
 #     return q9_evaluation(answer)
+
+@app.get("/image/{item_name}")
+async def get_image(item_name: str):
+        # 파일 경로 지정 (예시: "static/img" 폴더 내 이미지)
+    image_path = os.path.join("static", "img", f"{item_name}.jpg")
+    
+    # 이미지 파일이 존재할 경우 반환, 없으면 예외 발생
+    if os.path.exists(image_path):
+        return FileResponse(image_path)
+    else:
+        return {"error": "Image not found"}
  
 # 데이터 전달
 @app.get("/get_explanations")
