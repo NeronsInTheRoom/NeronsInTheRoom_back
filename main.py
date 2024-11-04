@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.responses import JSONResponse
+from pathlib import Path
 from stt import transcribe_audio
 from data import questions
 from data import answers
@@ -34,14 +35,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# static 폴더 마운트
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 @app.get("/start")
 async def get_questions():
     try:
-        return {"questions": questions, "answers": answers}
+        # static/audio 디렉토리의 경로
+        audio_dir = Path("static/audio")
+        
+        # wav 파일 목록 가져오기
+        audio_files = []
+        if audio_dir.exists():
+            audio_files = [
+                {
+                    "filename": file.name,
+                    "url": f"http://localhost:8000/static/audio/{file.name}"  # 전체 URL 제공
+                }
+                for file in audio_dir.glob("*.wav")
+            ]
+        
+        return {
+            "questions": questions, 
+            "answers": answers,
+            "audio_files": audio_files,
+            "explanations": explanations
+        }
+    
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"질문 목록을 가져오는 중 오류가 발생했습니다: {str(e)}"
+            detail=f"데이터를 가져오는 중 오류가 발생했습니다: {str(e)}"
         )
     
 # Q4, Q7 스코어 계산
