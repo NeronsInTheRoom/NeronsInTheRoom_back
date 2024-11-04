@@ -21,6 +21,7 @@ from module.Q8_qwen2 import q8_qwen2_evaluation
 from module.Q9 import q9_evaluation
 import asyncio
 import os
+import logging
 
 app = FastAPI()
 
@@ -130,48 +131,62 @@ async def speech_to_text(file: UploadFile = File(...)):
     }
 
 @app.post("/Q3")
-async def speech_to_text(location: str=Form(...), file: UploadFile = File(...)):
-    
+async def speech_to_text(place: str = Form(...), file: UploadFile = File(...)):
+    # 파일 확장자 확인
     if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
+        logging.error("지원하지 않는 파일 형식입니다.")
         raise HTTPException(
             status_code=400,
             detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
         )
     
+    # 파일 읽기
     contents = await file.read()
-        
-    text = await transcribe_audio(contents)
+    if not contents:
+        logging.error("파일 내용이 비어 있습니다.")
+        raise HTTPException(status_code=400, detail="파일 내용이 비어 있습니다.")
     
+    # 음성 텍스트 변환
+    try:
+        text = await transcribe_audio(contents)
+    except Exception as e:
+        logging.error(f"STT 변환 오류: {e}")
+        raise HTTPException(status_code=500, detail="STT 변환 중 오류 발생")
+
     try:
         # 5초 내에 q3_evaluation 함수 호출
-        score = await asyncio.wait_for(q3_evaluation(location, text), timeout=5)
-        
-        # 점수가 0일 경우 Q3-1의 결과를 추가로 호출하여 반환
-        if score == 0:
-            q3_1_result = await speech_to_text_alternate(location, file)
-            return {
-                "score": q3_1_result["score"],
-                "answer": q3_1_result["answer"]
-            }
-        
-        # 점수가 2일 경우 기본 Q3의 결과만 반환
-        return {
-            "score": score,
-            "answer": text  
-        }
-    
+        score = await asyncio.wait_for(q3_evaluation(place, text), timeout=5)
     except asyncio.TimeoutError:
-        # 5초 초과 시 Q3-1로 리디렉션
-        response = await speech_to_text_alternate(location, file)
-        return response
+        logging.error("Q3 평가 시간 초과")
+        raise HTTPException(status_code=500, detail="Q3 평가 시간 초과")
+    except Exception as e:
+        logging.error(f"Q3 평가 오류: {e}")
+        raise HTTPException(status_code=500, detail="Q3 평가 중 오류 발생")
+    
+    # Q3 평가 결과 반환
+    return {
+        "score": score,
+        "answer": text  
+    }
 
 @app.post("/Q3-1")
-async def speech_to_text_alternate(location: str=Form(...), file: UploadFile = File(...)):    
+async def speech_to_text_alternate(place: str = Form(...), file: UploadFile = File(...)):
     contents = await file.read()
-        
-    text = await transcribe_audio(contents)
-    
-    score = await q3_1_evaluation(location, text)
+    if not contents:
+        logging.error("Q3-1: 파일 내용이 비어 있습니다.")
+        raise HTTPException(status_code=400, detail="파일 내용이 비어 있습니다.")
+
+    try:
+        text = await transcribe_audio(contents)
+    except Exception as e:
+        logging.error(f"STT 변환 오류(Q3-1): {e}")
+        raise HTTPException(status_code=500, detail="STT 변환 중 오류 발생(Q3-1)")
+
+    try:
+        score = await q3_1_evaluation(place, text)
+    except Exception as e:
+        logging.error(f"Q3-1 평가 오류: {e}")
+        raise HTTPException(status_code=500, detail="Q3-1 평가 중 오류 발생")
     
     return {
         "score": score,
@@ -217,41 +232,6 @@ async def speech_to_text(file: UploadFile = File(...)):
         "score": score,
         "answer": text  
     }
-
-# @app.post("/testQ3")
-# async def speech_to_text(location: str=Form(...), answer: str=Form(...)):
-#     try:
-#         # 5초 내에 q3_evaluation 함수 호출
-#         score = await asyncio.wait_for(q3_evaluation(location, answer), timeout=5)
-        
-#         # 점수가 0일 경우에만 Q3-1의 결과를 추가로 호출하여 업데이트
-#         if score == 0:
-#             q3_1_result = await test_speech_to_text_alternate(location, answer)
-#             return {
-#                 "score": q3_1_result.get("score", 0),
-#                 "answer": q3_1_result.get("answer", answer)
-#             }
-        
-#         # 점수가 2일 경우는 기본 Q3의 결과만 반환
-#         return {
-#             "score": score,
-#             "answer": answer  
-#         }
-    
-#     except asyncio.TimeoutError:
-#         # 5초 초과 시 Q3-1로 리디렉션
-#         response = await test_speech_to_text_alternate(location, answer)
-#         return response
-
-# @app.post("/testQ3-1")
-# async def test_speech_to_text_alternate(location: str=Form(...), answer: str=Form(...)):
-    
-#     score = await q3_1_evaluation(location, answer)
-    
-#     return {
-#         "score": score,
-#         "answer": answer  
-#     }
     
 # @app.post("/Q8")
 # async def q8(answer: str=Form(...)):

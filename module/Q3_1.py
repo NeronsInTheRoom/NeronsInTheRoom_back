@@ -18,7 +18,7 @@ if gpt_model is None:
 # OpenAI 클라이언트 초기화 및 API 키 등록
 client = OpenAI(api_key=api_key)
 
-async def q3_1_evaluation(location, answer):
+async def q3_1_evaluation(place, answer):
     
     system_prompt = f"""
     
@@ -26,12 +26,12 @@ async def q3_1_evaluation(location, answer):
     - You are an expert location comparer.
 
     # Task
-    - First, the user's actual location: "{location}".
+    - First, the user's actual location: "{place}".
     - Second, the location answered by the user in response to the question "지금 있는 곳이 병원인가요? 집인가요?": "{answer}".
-    - Third, evaluate how well "{answer}" matches the user's actual location "{location}".
-    - Focus on whether "{answer}" clearly identifies or matches the specific place represented by "{location}" rather than describing possible activities or functions.
-    - For example, if "{location}" is "병원", acceptable answers would include "병원" or similar direct identifiers. If "{location}" is "집", acceptable answers might be "집" or equivalent terms.
-    - Fourth, if "{answer}" matches "{location}", assign a score of 1 in JSON format. If it does not match, assign a score of 0.
+    - Third, evaluate how well "{answer}" matches the user's actual location "{place}".
+    - Focus on whether "{answer}" clearly identifies or matches the specific place represented by "{place}" rather than describing possible activities or functions.
+    - For example, if "{place}" is "병원", acceptable answers would include "병원" or similar direct identifiers. If "{place}" is "집", acceptable answers might be "집" or equivalent terms.
+    - Fourth, if "{answer}" matches "{place}", assign a score of 1 in JSON format. If it does not match, assign a score of 0.
 
     # Output
     {{

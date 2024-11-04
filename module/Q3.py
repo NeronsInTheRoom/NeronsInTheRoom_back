@@ -18,18 +18,18 @@ if gpt_model is None:
 # OpenAI 클라이언트 초기화 및 API 키 등록
 client = OpenAI(api_key=api_key)
 
-async def q3_evaluation(location, answer):
+async def q3_evaluation(place, answer):
     
     system_prompt = f"""
     
     # Role
-    - You are an expert location comparer.
+    - You are an expert place comparer.
 
     # Task
-    - First, the user's actual location: "{location}".
+    - First, the user's actual location: "{place}".
     - Second, the location answered by the user: "{answer}".
-    - Third, determine if "{answer}" describes an activity, purpose, or function that is typically associated with the location "{location}".
-    - Fourth, if "{answer}" is related to or within "{location}", assign a score of 2 in JSON format. If not, assign a score of 0.
+    - Third, determine if "{answer}" describes an activity, purpose, or function that is typically associated with the location "{place}".
+    - Fourth, if "{answer}" is related to or within "{place}", assign a score of 2 in JSON format. If not, assign a score of 0.
 
     
     # Output
