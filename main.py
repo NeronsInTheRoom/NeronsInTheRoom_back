@@ -256,28 +256,11 @@ async def speech_to_text(image_name: str = Form(...), file: UploadFile = File(..
     contents = await file.read()
     text = await transcribe_audio(contents)
     
-    score = await q8_evaluation(image_name, text)
+    result = await q8_evaluation(image_name, text)
     
-    res = {
-        "score": score,
-        "answer": text  
-    }
+    print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
-    # 점수가 0일 경우 정답 반환
-    if score == 0:
-        # 미리 정의된 이미지와 정답 매핑
-        image_answers = {
-            "clock": "시계",
-            "coin": "동전",
-            "key": "열쇠",
-            "pencil": "연필",
-            "stamp": "도장"
-        }
-        correct_answer = image_answers.get(image_name, "정의되지 않음")
-        res["correct_answer"] = correct_answer
-        print(f"정답: {res}")
-    
-    return res
+    return result
 
 @app.post("/Q8-1")
 async def speech_to_text_alternate(file: UploadFile = File(...)):
