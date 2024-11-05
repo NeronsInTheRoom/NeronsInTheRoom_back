@@ -22,12 +22,12 @@ client = OpenAI(api_key=api_key)
 # Q8-1의 정답 키워드 목록 정의
 expected_objects = ["시계", "동전", "열쇠", "연필", "도장"]
 
-# Q8-1 질문 텍스트 가져오기
-q8_1_question = next((q["value"] for q in questions if q["key"] == "Q8-1"), None)
-if q8_1_question is None:
-    raise ValueError("Q8-1 질문을 찾을 수 없습니다.")
-
 async def q8_1_evaluation(answer):
+    
+    # Q8-1 질문 텍스트 가져오기
+    q8_1_question = next((q["value"] for q in questions if q["key"] == "Q8-1"), None)
+    if q8_1_question is None:
+        raise ValueError("Q8-1 질문을 찾을 수 없습니다.")
     
     # 예상 객체 목록을 문자열로 정리
     expected_objects_str = ", ".join(expected_objects)
