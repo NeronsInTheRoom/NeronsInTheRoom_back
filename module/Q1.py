@@ -77,21 +77,12 @@ async def q1_evaluation(birth_date, answer):
     - Assign only 1 and 0.
     - The user's score is placed in the "score" type in the JSON output.
     
-    # Answer
-    - The user's answer is placed in the "answer" type in the JSON output.
-    
-    # Questions
-    - The question {q1_question} received by the user is placed in the "questions" type in the JSON output.
-    
-    # CorreactAnswer
-    - The correct answer to the question is placed in the "correctAnswer" type in the JSON output.
-    
     # Output
     {{
         "score":"",
-        "answer":"",
-        "questions":"",
-        "correctAnswer":""
+        "answer":"{answer}",
+        "questions":"{q1_question}",
+        "correctAnswer":"{correct_age}"
         
     }}
     """
