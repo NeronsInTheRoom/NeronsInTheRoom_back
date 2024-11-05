@@ -21,9 +21,9 @@ from module.Q3_1 import q3_1_evaluation
 from module.Q8 import q8_evaluation
 from module.Q8_1 import q8_1_evaluation
 from module.Q9 import q9_evaluation
-import asyncio
+from data import questions
 import os
-import logging
+import json
 
 app = FastAPI()
 
@@ -187,16 +187,14 @@ async def speech_to_text(birth_date: str=Form(...), file: UploadFile = File(...)
             status_code=400,
             detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
         )
-    
+        
     contents = await file.read()
     text = await transcribe_audio(contents)
+    result = await q1_evaluation(birth_date, text)
     
-    score = await q1_evaluation(birth_date, text)
+    print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
-    return {
-        "score": score,
-        "answer": text  
-    }
+    return result
 
 @app.post("/Q2")
 async def speech_to_text(file: UploadFile = File(...)):
@@ -208,75 +206,43 @@ async def speech_to_text(file: UploadFile = File(...)):
     
     contents = await file.read()
     text = await transcribe_audio(contents)
+    result = await q2_evaluation(text)
     
-    score = await q2_evaluation(text)
+    print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
-    return {
-        "score": score,
-        "answer": text  
-    }
+    return result
 
 @app.post("/Q3")
 async def speech_to_text(place: str = Form(...), file: UploadFile = File(...)):
-    # 파일 확장자 확인
     if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
-        logging.error("지원하지 않는 파일 형식입니다.")
         raise HTTPException(
             status_code=400,
             detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
         )
     
-    # 파일 읽기
     contents = await file.read()
-    if not contents:
-        logging.error("파일 내용이 비어 있습니다.")
-        raise HTTPException(status_code=400, detail="파일 내용이 비어 있습니다.")
+    text = await transcribe_audio(contents)
+    result = await q3_evaluation(place, text)
     
-    # 음성 텍스트 변환
-    try:
-        text = await transcribe_audio(contents)
-    except Exception as e:
-        logging.error(f"STT 변환 오류: {e}")
-        raise HTTPException(status_code=500, detail="STT 변환 중 오류 발생")
-
-    try:
-        score = await q3_evaluation(place, text)
-    except asyncio.TimeoutError:
-        logging.error("Q3 평가 시간 초과")
-        raise HTTPException(status_code=500, detail="Q3 평가 시간 초과")
-    except Exception as e:
-        logging.error(f"Q3 평가 오류: {e}")
-        raise HTTPException(status_code=500, detail="Q3 평가 중 오류 발생")
+    print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
-    # Q3 평가 결과 반환
-    return {
-        "score": score,
-        "answer": text  
-    }
+    return result
 
 @app.post("/Q3-1")
 async def speech_to_text_alternate(place: str = Form(...), file: UploadFile = File(...)):
-    contents = await file.read()
-    if not contents:
-        logging.error("Q3-1: 파일 내용이 비어 있습니다.")
-        raise HTTPException(status_code=400, detail="파일 내용이 비어 있습니다.")
-
-    try:
-        text = await transcribe_audio(contents)
-    except Exception as e:
-        logging.error(f"STT 변환 오류(Q3-1): {e}")
-        raise HTTPException(status_code=500, detail="STT 변환 중 오류 발생(Q3-1)")
-
-    try:
-        score = await q3_1_evaluation(place, text)
-    except Exception as e:
-        logging.error(f"Q3-1 평가 오류: {e}")
-        raise HTTPException(status_code=500, detail="Q3-1 평가 중 오류 발생")
+    if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
+        raise HTTPException(
+            status_code=400,
+            detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
+        )
     
-    return {
-        "score": score,
-        "answer": text  
-    }
+    contents = await file.read()
+    text = await transcribe_audio(contents)
+    result = await q3_1_evaluation(place, text)
+    
+    print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
+    
+    return result
     
 @app.post("/Q8")
 async def speech_to_text(image_name: str = Form(...), file: UploadFile = File(...)):
@@ -288,29 +254,11 @@ async def speech_to_text(image_name: str = Form(...), file: UploadFile = File(..
     
     contents = await file.read()
     text = await transcribe_audio(contents)
+    result = await q8_evaluation(image_name, text)
     
-    score = await q8_evaluation(image_name, text)
+    print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
-    res = {
-        "score": score,
-        "answer": text  
-    }
-    
-    # 점수가 0일 경우 정답 반환
-    if score == 0:
-        # 미리 정의된 이미지와 정답 매핑
-        image_answers = {
-            "clock": "시계",
-            "coin": "동전",
-            "key": "열쇠",
-            "pencil": "연필",
-            "stamp": "도장"
-        }
-        correct_answer = image_answers.get(image_name, "정의되지 않음")
-        res["correct_answer"] = correct_answer
-        print(f"정답: {res}")
-    
-    return res
+    return result
 
 @app.post("/Q8-1")
 async def speech_to_text_alternate(file: UploadFile = File(...)):
@@ -322,17 +270,14 @@ async def speech_to_text_alternate(file: UploadFile = File(...)):
     
     contents = await file.read()
     text = await transcribe_audio(contents)
+    result = await q8_1_evaluation(text)
     
-    score = await q8_1_evaluation(text)
+    print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
-    return {
-        "score": score,
-        "answer": text  
-    }
-
+    return result
+    
 @app.post("/Q9")
 async def speech_to_text(file: UploadFile = File(...)):
-    
     if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
         raise HTTPException(
             status_code=400,
@@ -341,15 +286,13 @@ async def speech_to_text(file: UploadFile = File(...)):
     
     contents = await file.read()
     text = await transcribe_audio(contents)
-    
-    score = await q9_evaluation(text)
-    
-    return {
-        "score": score,
-        "answer": text  
-    }
+    result = await q9_evaluation(text)
 
-# Q8, Q8-1의 이미지 통신 코드
+    print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
+    
+    return result
+
+# Q8의 이미지 통신 코드
 @app.get("/image/{item_name}")
 async def get_image(item_name: str):
         # 파일 경로 지정 (예시: "static/img" 폴더 내 이미지)

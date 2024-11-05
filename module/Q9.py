@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from openai import OpenAI
+from data import questions
 import os
 import json
 
@@ -18,24 +19,29 @@ if gpt_model is None:
 # OpenAI 클라이언트 초기화 및 API 키 등록
 client = OpenAI(api_key=api_key)
 
+# Q9의 정답 키워드 예시 목록 정의
+expected_objects = [
+    "배추", "무", "상추", "시금치", "깻잎", 
+    "대파", "부추", "열무", "고추", "오이", 
+    "호박", "가지", "콩나물", "마늘"
+]
+
 async def q9_evaluation(answer):
+    
+    # Q9 질문 텍스트 가져오기
+    q9_question = next((q["value"] for q in questions if q["key"] == "Q9"), None)
+    if q9_question is None:
+        raise ValueError("Q9 질문을 찾을 수 없습니다.")
         
     system_prompt = f"""
     # Role
-    - You are a professional vegetable identifier who identifies vegetables.
+    - You have a scoring system that evaluates your answers to user questions. The user's answer is checked to see if it fits the question and given a score.
 
     # Task
-    - Given a single string of vegetable names without spaces, separate and identify each vegetable name.
-    - The identified vegetables are actually Check if the vegetables are present.
-    
-    # Policy
-    - Responses must be in Korean only, without any Chinese characters or mixed languages.
-    - Provide the list of identified vegetables in the following JSON array format
-    
-    # Output Example
-    {{
-        "vegetable_list": ["채소1", "채소2", "채소3"...]
-    }}
+    - First, the question received by the user is {q9_question}.
+    - Second, the location where the user answered is {answer}.
+    - Third, identify the presence of “vegetables” in the user’s answer.
+    - Fourth, if there are any "vegetables" identified, it returns a JSON object containing a "vegetable_list".
     
     # Output
     {{
@@ -74,4 +80,11 @@ async def q9_evaluation(answer):
     else:
         score = 0
 
-    return ({"score": score})
+    final_result = {
+        "score": score,
+        "answer": answer,
+        "questions": q9_question,
+        "correctAnswer": expected_objects
+    }
+    
+    return final_result

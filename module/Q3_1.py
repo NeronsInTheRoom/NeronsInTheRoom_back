@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from openai import OpenAI
+from data import questions
 import os
 import json
 
@@ -20,26 +21,34 @@ client = OpenAI(api_key=api_key)
 
 async def q3_1_evaluation(place, answer):
     
+    # Q3-1 질문 텍스트 가져오기
+    q3_1_question = next((q["value"] for q in questions if q["key"] == "Q3-1"), None)
+    if q3_1_question is None:
+        raise ValueError("Q3-1 질문을 찾을 수 없습니다.")
+    
     system_prompt = f"""
     
     # Role
-    - You are an expert location comparer.
+    - You have a scoring system that evaluates your answers to user questions. The user's answer is checked to see if it fits the question and given a score.
 
     # Task
-    - First, the user's actual location: "{place}".
-    - Second, the location answered by the user in response to the question "지금 있는 곳이 병원인가요? 집인가요?": "{answer}".
-    - Third, evaluate how well "{answer}" matches the user's actual location "{place}".
-    - Focus on whether "{answer}" clearly identifies or matches the specific place represented by "{place}" rather than describing possible activities or functions.
-    - For example, if "{place}" is "병원", acceptable answers would include "병원" or similar direct identifiers. If "{place}" is "집", acceptable answers might be "집" or equivalent terms.
-    - Fourth, if "{answer}" matches "{place}", assign a score of 1 in JSON format. If it does not match, assign a score of 0.
-
+    - First, the question received by the user is {q3_1_question}.
+    - Second, the user's actual location is {place}.
+    - Third, the location where the user answered is {answer}.
+    - Fourth, compare whether the user's answer "{answer}" matches the user's actual place "{place}".
+    - Fifth, if "{answer}" is related to or within "{place}", assign a score of 1 in JSON format. If not, assign a score of 0.
+    
     # Output
     {{
-        "score":
+        "score":"",
+        "answer":"{answer}",
+        "questions":"{q3_1_question}",
+        "correctAnswer":"{place}"
+        
     }}
     """
     
-        # API 호출
+    # API 호출
     completion = client.chat.completions.create(
         model=gpt_model,
         messages=[
@@ -54,7 +63,7 @@ async def q3_1_evaluation(place, answer):
     try:
         # 결과를 JSON 형식으로 로드하여 반환
         result = json.loads(response_content)
-        return result["score"]
+        return result
     except json.JSONDecodeError:
         print("응답이 JSON 형식이 아닙니다. 응답 내용:", response_content)
         return None

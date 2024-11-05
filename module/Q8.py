@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from openai import OpenAI
+from data import questions
 import os
 import json
 
@@ -18,22 +19,57 @@ if gpt_model is None:
 # OpenAI 클라이언트 초기화 및 API 키 등록
 client = OpenAI(api_key=api_key)
 
+# 이미지 이름에 따른 정답 키워드 목록 정의
+image_keywords = {
+    "clock": ["시계", "벽시계"],
+    "coin": ["동전", "돈"],
+    "key": ["열쇠", "키"],
+    "pencil": ["연필", "펜"],
+    "stamp": ["도장"]
+}
+
+# 이미지 이름을 한글로 매핑하는 딕셔너리
+image_name_korean = {
+    "clock": "시계",
+    "coin": "동전",
+    "key": "열쇠",
+    "pencil": "연필",
+    "stamp": "도장"
+}
+
 async def q8_evaluation(image_name, answer):
+    
+    # Q8 질문 텍스트 가져오기
+    q8_question = next((q["value"] for q in questions if q["key"] == "Q8"), None)
+    if q8_question is None:
+        raise ValueError("Q8 질문을 찾을 수 없습니다.")
+    
+    # 이미지 이름에 해당하는 정답 키워드 목록 가져오기
+    correct_keywords = image_keywords.get(image_name, [])
+    keywords_str = ", ".join(correct_keywords)
+    
+    # 이미지 이름을 한글로 변환
+    correct_answer_korean = image_name_korean.get(image_name, image_name)
     
     system_prompt = f"""
     
     # Role
-    - You are an expert in identifying objects and determining if a given description accurately matches the object.
+    - You have a scoring system that evaluates your answers to user questions. The user's answer is checked to see if it fits the question and given a score.
     
     # Task
-    - First, here is the image object {image_name} that the user asked a question about.
-    - Second, the following is an answer {answer} based on the user's question.
-    - Third, compare {image_name} and {answer} to evaluate whether they match.
-    - Fourth, if “{answer}” is similar to “{image_name}”, 1 point is given in JSON format. If there is no match, 0 points are given.
+    - The user is viewing an image of a "{image_name}".
+    - Expected correct answers for this image include the following keywords: {keywords_str}.
+    - The user's answer is "{answer}".
+    - Evaluate whether "{answer}" matches any of the correct keywords associated with "{image_name}".
+    - If "{answer}" is similar to one of the keywords, assign 1 point in JSON format. If there is no match, assign 0 points.
     
     # Output
     {{
-        "score":
+        "score":"",
+        "answer":"{answer}",
+        "questions":"{q8_question}",
+        "correctAnswer":"{correct_answer_korean}"
+        
     }}
     """
     
@@ -56,4 +92,4 @@ async def q8_evaluation(image_name, answer):
         print("응답이 JSON 형식이 아닙니다. 응답 내용:", response_content)
         return None
     
-    return result['score']
+    return result

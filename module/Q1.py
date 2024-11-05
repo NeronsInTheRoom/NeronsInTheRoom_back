@@ -1,68 +1,119 @@
+from dotenv import load_dotenv
+from openai import OpenAI
+from data import questions, correctAnswer
 from datetime import datetime
+import os
+import json
 import re
 
-# 한글 숫자를 정수로 변환하는 함수
-def convert_korean_number_to_int(korean_number):
-    # 한글 숫자 매핑
-    units = {"일": 1, "이": 2, "삼": 3, "사": 4, "오": 5, "육": 6, "칠": 7, "팔": 8, "구": 9, "영": 0}
-    tens = {"십": 10, "스물": 20, "서른": 30, "마흔": 40, "쉰": 50, "예순": 60, "일흔": 70, "여든": 80, "아흔": 90}
+load_dotenv()
 
-    result = 0
-    current_tens = 0
+# API_KEY 가져오기
+api_key = os.getenv("API_KEY")
+if api_key is None:
+    raise ValueError("API_KEY가 없습니다.")
 
-    # 한글 숫자 문자열을 처리할 수 있도록 수정
-    for word in korean_number:
-        if word in tens:
-            current_tens = tens[word]
-        elif word in units:
-            result += current_tens + units[word]
-            current_tens = 0
-        elif word == "십" and current_tens == 0:
-            current_tens = 10
-        elif word == "십" and current_tens != 0:
-            current_tens += 10
+# GPT 모델 가져오기
+gpt_model = os.getenv("GPT")
+if gpt_model is None:
+    raise ValueError("GPT_Model이 없습니다.")
 
-    result += current_tens  # 남아있는 십 단위 값 추가
+# OpenAI 클라이언트 초기화 및 API 키 등록
+client = OpenAI(api_key=api_key)
 
-    return result
+# 생년월일로부터 나이 계산 함수
+def calculate_age(birth_date_str):
+    birth_date = datetime.strptime(birth_date_str, "%Y%m%d")
+    today = datetime.today()
+    age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+    return age
+
+# correctAnswer 리스트의 Q1 업데이트 함수
+def update_correct_answer_with_age(birth_date_str):
+    correct_age = calculate_age(birth_date_str)  # 실제 나이 계산
+    # print(f"Calculated age: {correct_age}")  # 디버깅 메시지 추가
+    
+    for answer in correctAnswer:
+        if answer["key"] == "Q1":
+            answer["value"] = str(correct_age)  # 나이를 문자열로 변환하여 저장
+            # print(f"Updated correctAnswer: {correctAnswer}")  # 업데이트 후 확인
+            break
+
+# 사용자의 나이 응답 파싱 함수
+def parse_age(answer):
+    # 숫자+살 형태의 답변 처리
+    num_match = re.search(r'(\d+)', answer)
+    if num_match:
+        return int(num_match.group(1))
+    
+    # 한글로 된 나이 (예: 스물아홉살)를 숫자로 변환
+    korean_numbers = {
+        "하나": 1, "둘": 2, "셋": 3, "넷": 4, "다섯": 5, "여섯": 6, "일곱": 7, "여덟": 8, "아홉": 9,
+        "열": 10, "스물": 20, "서른": 30, "마흔": 40, "쉰": 50, "예순": 60, "일흔": 70, "여든": 80, "아흔": 90
+    }
+    age = 0
+    for word in korean_numbers:
+        if word in answer:
+            age += korean_numbers[word]
+    return age if age > 0 else None
 
 async def q1_evaluation(birth_date, answer):
-    
-    # 현재 날짜 가져오기
-    current_date = datetime.now()
-    
-    # 생년월일을 datetime 객체로 변환
-    birth_date_str = re.sub(r'\D', '', birth_date)  # 숫자만 추출
-    if len(birth_date_str) != 8:
-        print("생년월일 형식이 잘못되었습니다. YYYYMMDD 형식이어야 합니다.")
-        return {"score": 0}
-    
-    # 생년월일을 datetime 형식으로 변환
-    birth_date_obj = datetime.strptime(birth_date_str, "%Y%m%d")
-    
     # 실제 나이 계산
-    actual_age = current_date.year - birth_date_obj.year - ((current_date.month, current_date.day) < (birth_date_obj.month, birth_date_obj.day))
+    correct_age = calculate_age(birth_date)
     
-    # 답변에서 숫자만 추출
-    answer = answer.replace(" ", "")  # 공백 제거
-    answer = answer.replace("살", "")  # "살" 제거
-    answer_num_str = re.sub(r'\D', '', answer)
+    # Q1 질문 텍스트 가져오기
+    q1_question = next((q["value"] for q in questions if q["key"] == "Q1"), None)
+    if q1_question is None:
+        raise ValueError("Q1 질문을 찾을 수 없습니다.")
     
-    if answer_num_str:
-        answer_num = int(answer_num_str)
-    else:
-        # 숫자만이 아닌 경우, 한글 숫자를 정수로 변환 시도
-        answer_num = convert_korean_number_to_int(answer)
-        if answer_num == 0:  # 변환 실패 시
-            print("답변에서 숫자를 찾을 수 없습니다.")
-            return {"score": 0}
+    # 사용자의 나이 응답 파싱
+    user_age = parse_age(answer)
+    if user_age is None:
+        raise ValueError("사용자의 답변에서 나이를 파악할 수 없습니다.")
     
-    print(f"생년월일: {birth_date}, 답변 나이: {answer}")
-    print(f"실제 나이: {actual_age}, 답변 나이: {answer_num}")
+    system_prompt = f"""
     
-    # 실제 나이 - 답변 나이 = 절대값 구하기
-    difference = abs(actual_age - answer_num)
-    print(f"절대값: {difference}")
-    res_abs = 1 if difference <= 2 else 0
+    # Role
+    - You have a scoring system that evaluates your answers to user questions. The user's answer is checked to see if it fits the question and given a score.
+
+    # Task
+    - First, the question received by the user is {q1_question}.
+    - Second, the user's actual age is {correct_age}.
+    - Third, the age answered by the user is {user_age}.
+    - Fourth, compare the user's actual age with the age answered by the user.
+    - Fifth, the margin of error for age can be up to 2 years.
+    - Sixth, 1 point for a correct answer and 0 points for an incorrect answer are assigned to the "score" type of the JSON output.
     
-    return res_abs
+    # Score
+    - Assign only 1 and 0.
+    - The user's score is placed in the "score" type in the JSON output.
+    
+    # Output
+    {{
+        "score":"",
+        "answer":"{answer}",
+        "questions":"{q1_question}",
+        "correctAnswer":"{correct_age}"
+        
+    }}
+    """
+    
+    # API 호출
+    completion = client.chat.completions.create(
+        model=gpt_model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": answer}
+        ],
+        temperature=0
+    )
+
+    response_content = completion.choices[0].message.content
+    
+    try:
+        # 결과를 JSON 형식으로 로드하여 반환
+        result = json.loads(response_content)
+        return result
+    except json.JSONDecodeError:
+        print("응답이 JSON 형식이 아닙니다. 응답 내용:", response_content)
+        return None
