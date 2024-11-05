@@ -4,11 +4,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.responses import JSONResponse
 from pathlib import Path
-from stt import transcribe_audio
+from module.stt import transcribe_audio
 from data import questions
-from data import answers
-from Q4andQ7 import Q4AndQ7Score
-from Q5andQ6 import Q5AndQ6Score
+from data import correctAnswer
+from module.Q4andQ7 import Q4AndQ7Score
+from module.Q5andQ6 import Q5AndQ6Score
 # from module.tts import generate_audio
 from data import explanations
 from data import scores
@@ -63,9 +63,10 @@ async def get_questions():
         
         return {
             "questions": questions, 
-            "answers": answers,
+            "correctAnswer": correctAnswer,
             "audio_files": audio_files,
-            "explanations": explanations
+            "explanations": explanations,
+            "maxScores": scores
         }
     
     except Exception as e:
