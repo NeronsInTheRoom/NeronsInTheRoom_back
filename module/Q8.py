@@ -54,7 +54,7 @@ async def q8_evaluation(image_name, answer):
     system_prompt = f"""
     
     # Role
-    - You are an expert in identifying objects and determining if a given description accurately matches the object.
+    - You have a scoring system that evaluates your answers to user questions. The user's answer is checked to see if it fits the question and given a score.
     
     # Task
     - The user is viewing an image of a "{image_name}".

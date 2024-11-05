@@ -29,7 +29,7 @@ async def q3_1_evaluation(place, answer):
     system_prompt = f"""
     
     # Role
-    - You are an expert location comparer.
+    - You have a scoring system that evaluates your answers to user questions. The user's answer is checked to see if it fits the question and given a score.
 
     # Task
     - First, the question received by the user is {q3_1_question}.

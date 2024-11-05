@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from openai import OpenAI
+from data import questions
 import os
 import json
 
@@ -18,17 +19,29 @@ if gpt_model is None:
 # OpenAI 클라이언트 초기화 및 API 키 등록
 client = OpenAI(api_key=api_key)
 
+# Q8-1의 정답 키워드 목록 정의
+expected_objects = ["시계", "동전", "열쇠", "연필", "도장"]
+
+# Q8-1 질문 텍스트 가져오기
+q8_1_question = next((q["value"] for q in questions if q["key"] == "Q8-1"), None)
+if q8_1_question is None:
+    raise ValueError("Q8-1 질문을 찾을 수 없습니다.")
+
 async def q8_1_evaluation(answer):
+    
+    # 예상 객체 목록을 문자열로 정리
+    expected_objects_str = ", ".join(expected_objects)
     
     system_prompt = f"""
     
     # Role
-    - You are a language model that evaluates Korean object names mentioned in a response against a predefined list of objects.
+    - You have a scoring system that evaluates your answers to user questions. The user's answer is checked to see if it fits the question and given a score.
 
-    # Task
-    - First, if you have a single string of Korean object names written together without spaces, separate each word.
-    - Second, if words with the same meaning, such as "clock", "coin", "key", "pencil", and "stamp", are listed in an array.
-    - Lists separated words in JSON array format.
+    - The question provided to the user is: "{q8_1_question}".
+    - The expected correct objects that the user might mention include: {expected_objects_str}.
+    - The user's response is: "{answer}".
+    - Evaluate if "{answer}" includes any of the expected objects listed above. 
+    - Return a JSON object with "answer_list" containing the matched objects.
     
     # Output
     {{
@@ -72,5 +85,12 @@ async def q8_1_evaluation(answer):
         score = 1
     else:
         score = 0
+        
+    final_result = {
+        "score": score,
+        "answer": answer,
+        "questions": q8_1_question,
+        "correctAnswer": expected_objects
+    }
 
-    return ({"score": score})
+    return final_result
