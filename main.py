@@ -24,6 +24,7 @@ from module.Q9 import q9_evaluation
 import asyncio
 import os
 import logging
+import json
 
 app = FastAPI()
 
@@ -193,7 +194,7 @@ async def speech_to_text(birth_date: str=Form(...), file: UploadFile = File(...)
     
     result = await q1_evaluation(birth_date, text)
     
-    # print(f"result: {result}")
+    # print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
     return result
 
@@ -208,12 +209,11 @@ async def speech_to_text(file: UploadFile = File(...)):
     contents = await file.read()
     text = await transcribe_audio(contents)
     
-    score = await q2_evaluation(text)
+    result = await q2_evaluation(text)
     
-    return {
-        "score": score,
-        "answer": text  
-    }
+    # print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
+    
+    return result
 
 @app.post("/Q3")
 async def speech_to_text(place: str = Form(...), file: UploadFile = File(...)):

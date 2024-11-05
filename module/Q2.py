@@ -1,78 +1,105 @@
-from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
-import datetime
-import re
+from dotenv import load_dotenv
+from openai import OpenAI
+from data import questions
+from datetime import datetime
+import os
+import json
+
+load_dotenv()
+
+# API_KEY 가져오기
+api_key = os.getenv("API_KEY")
+if api_key is None:
+    raise ValueError("API_KEY가 없습니다.")
+
+# GPT 모델 가져오기
+gpt_model = os.getenv("GPT")
+if gpt_model is None:
+    raise ValueError("GPT_Model이 없습니다.")
+
+# OpenAI 클라이언트 초기화 및 API 키 등록
+client = OpenAI(api_key=api_key)
+
+# 오늘 날짜 정보 가져오기
+today = datetime.now()
+current_year = today.year
+current_month = today.month
+current_day = today.day
+
+# 영문 요일을 한글로 매핑
+weekday_korean = {
+    "Monday": "월요일",
+    "Tuesday": "화요일",
+    "Wednesday": "수요일",
+    "Thursday": "목요일",
+    "Friday": "금요일",
+    "Saturday": "토요일",
+    "Sunday": "일요일"
+}
+
+# 오늘 요일 가져오기
+current_weekday = weekday_korean[today.strftime("%A")]
+
+# 오늘 날짜
+today = f"{current_year}년 {current_month}월 {current_day}일 {current_weekday}"
 
 async def q2_evaluation(answer):
     
-    # NER 모델과 토크나이저 로드
-    model_name = "KoichiYasuoka/roberta-large-korean-upos"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForTokenClassification.from_pretrained(model_name)
-    ner = pipeline("ner", model=model, tokenizer=tokenizer, aggregation_strategy="simple")
+    # Q2 질문 텍스트 가져오기
+    q2_question = next((q["value"] for q in questions if q["key"] == "Q2"), None)
+    if q2_question is None:
+        raise ValueError("Q2 질문을 찾을 수 없습니다.")
     
-    # 오늘 날짜 정보 가져오기
-    today = datetime.datetime.now()
-    current_year = today.year
-    current_month = today.month
-    current_day = today.day
+    system_prompt = f"""
     
-    # 영문 요일을 한글로 매핑
-    weekday_korean = {
-        "Monday": "월요일",
-        "Tuesday": "화요일",
-        "Wednesday": "수요일",
-        "Thursday": "목요일",
-        "Friday": "금요일",
-        "Saturday": "토요일",
-        "Sunday": "일요일"
-    }
-    
-    # 오늘 요일 가져오기
-    current_weekday = weekday_korean[today.strftime("%A")]
-    
-    # NER 모델로 날짜 정보 추출
-    entities = ner(answer)
-    
-    # 날짜 정보 초기화
-    year, month, day, weekday = None, None, None, None
+    # Role
+    - You have a scoring system that evaluates your answers to user questions. The user's answer is checked to see if it fits the question and given a score.
 
-    # 엔티티 반복 처리
-    for entity in entities:
-        entity_text = entity["word"]
-                
-        # 연도 추출
-        if "년" in entity_text:
-            match = re.search(r'\d+', entity_text)
-            if match:
-                year = int(match.group())
-                
-        # 월 추출
-        elif "월" in entity_text and "요일" not in entity_text:  # 요일이 아닌 월 추출
-            match = re.search(r'\d+', entity_text)
-            if match:
-                month = int(match.group())
-                
-        # 일 추출
-        elif "일" in entity_text and "요일" not in entity_text:
-            match = re.search(r'\d+', entity_text)
-            if match:
-                day = int(match.group())
-        
-        # 요일 추출
-        elif "요일" in entity_text:
-            weekday_match = re.search(r'(월요일|화요일|수요일|목요일|금요일|토요일|일요일)', entity_text)
-            if weekday_match:
-                weekday = weekday_match.group()
-                
-    # 점수 계산
-    score = 0
-    if year == current_year:
-        score += 1
-    if month == current_month:
-        score += 1
-    if day == current_day:
-        score += 1
-    if weekday == current_weekday:
-        score += 1
+    # Task
+    - First, the question received by the user is {q2_question}.
+    - Second, today is {today}.
+    - Third, the date the user answered is {answer}.
+    - Fourth, compare today's date with the date the user answered.
+    - Fifth, 1 point is assigned for each correct answer among year, month, day, and day of the week.
     
-    return {"score": score}
+    # Score
+    - The user's score is placed in the "score" type in the JSON output.
+    
+    # Answer
+    - The user's answer is placed in the "answer" type in the JSON output.
+    
+    # Questions
+    - The question {q2_question} received by the user is placed in the "questions" type in the JSON output.
+    
+    # CorreactAnswer
+    - The correct answer to the question is placed in the "correctAnswer" type in the JSON output.
+    
+    # Output
+    {{
+        "score":"",
+        "answer":"",
+        "questions":"",
+        "correctAnswer":""
+        
+    }}
+    """
+    
+    # API 호출
+    completion = client.chat.completions.create(
+        model=gpt_model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": answer}
+        ],
+        temperature=0
+    )
+
+    response_content = completion.choices[0].message.content
+    
+    try:
+        # 결과를 JSON 형식으로 로드하여 반환
+        result = json.loads(response_content)
+        return result
+    except json.JSONDecodeError:
+        print("응답이 JSON 형식이 아닙니다. 응답 내용:", response_content)
+        return None
