@@ -21,9 +21,8 @@ from module.Q3_1 import q3_1_evaluation
 from module.Q8 import q8_evaluation
 from module.Q8_1 import q8_1_evaluation
 from module.Q9 import q9_evaluation
-import asyncio
+from data import questions
 import os
-import logging
 import json
 
 app = FastAPI()
@@ -219,7 +218,6 @@ async def speech_to_text(file: UploadFile = File(...)):
 async def speech_to_text(place: str = Form(...), file: UploadFile = File(...)):
     # 파일 확장자 확인
     if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
-        logging.error("지원하지 않는 파일 형식입니다.")
         raise HTTPException(
             status_code=400,
             detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
