@@ -193,7 +193,7 @@ async def speech_to_text(birth_date: str=Form(...), file: UploadFile = File(...)
     
     result = await q1_evaluation(birth_date, text)
     
-    print(f"result: {result}")
+    # print(f"result: {result}")
     
     return result
 

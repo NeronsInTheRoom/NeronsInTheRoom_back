@@ -108,8 +108,6 @@ async def q1_evaluation(birth_date, answer):
 
     response_content = completion.choices[0].message.content
     
-    # print(f"값 확인: {response_content}")
-    
     try:
         # 결과를 JSON 형식으로 로드하여 반환
         result = json.loads(response_content)
