@@ -239,12 +239,11 @@ async def speech_to_text_alternate(place: str = Form(...), file: UploadFile = Fi
     contents = await file.read()
     text = await transcribe_audio(contents)
 
-    score = await q3_1_evaluation(place, text)
+    result = await q3_1_evaluation(place, text)
     
-    return {
-        "score": score,
-        "answer": text  
-    }
+    # print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
+    
+    return result
     
 @app.post("/Q8")
 async def speech_to_text(image_name: str = Form(...), file: UploadFile = File(...)):
