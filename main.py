@@ -35,6 +35,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 사용시에만 주석제거
+# @app.post("/tts")
+# async def tts(text: str, filename: str):
+#     result = await generate_audio(text, filename)
+#     return result
+
 # static 폴더 마운트
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -172,12 +178,6 @@ async def speech_to_text_q7(
     correctAnswer: str = Form(...)
 ):
     return await Q4andQ7(file, correctAnswer)
-
-# 사용시에만 주석제거
-# @app.post("/tts")
-# async def generate_audio(text: str, filename: str):
-#     result = generate_audio(text=text, filename=filename)
-#     return result
 
 @app.post("/Q1")
 async def speech_to_text(birth_date: str=Form(...), file: UploadFile = File(...)):

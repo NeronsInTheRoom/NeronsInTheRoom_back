@@ -1,5 +1,6 @@
 import os
 import sys
+import asyncio
 
 # MeloTTS 디렉토리를 Python 경로에 추가
 sys.path.append(os.path.abspath('MeloTTS'))
@@ -10,7 +11,7 @@ speed = 1.0
 device = 'cpu'  # 또는 'cuda:0'
 model = TTS(language='KR', device=device)
 
-def generate_audio(text: str, filename: str):
+async def generate_audio(text: str, filename: str):
     # 오디오 파일을 저장할 디렉토리 설정
     output_dir = 'static/audio'
     os.makedirs(output_dir, exist_ok=True)
