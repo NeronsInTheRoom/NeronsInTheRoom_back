@@ -28,7 +28,7 @@ datas = [
     {"key": "D8-6", "value": "동전 입니다."},
 ]
 
-answers = [
+correctAnswer = [
     {"key": "Q1", "value": ""},
     {"key": "Q2", "value": ""},
     {"key": "Q3", "value": ""},
