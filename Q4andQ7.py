@@ -29,9 +29,9 @@ async def Q4AndQ7Score(text: str, correctAnswer: str):
             return 1 if similarity >= 0.8 else 0
 
         @staticmethod
-        def calculate_ordered_scores(user_words, correct_words):
-            """순서를 고려하여 점수 계산"""
-            scores = [0] * len(correct_words)  # 모든 점수를 0으로 초기화
+        def calculate_scores(user_words, correct_words):
+            """단어 개수에 따라 유동적으로 점수 계산"""
+            scores = []
             
             # 각 위치별로 점수 계산
             for i, correct_word in enumerate(correct_words):
@@ -39,7 +39,14 @@ async def Q4AndQ7Score(text: str, correctAnswer: str):
                     similarity_score = WordSimilarityChecker.calculate_word_similarity(
                         correct_word, user_words[i]
                     )
-                    scores[i] = similarity_score
+                    scores.append(similarity_score)
+            
+            # 입력되지 않은 나머지 정답 단어들에 대해 0점 처리
+            scores.extend([0] * (len(correct_words) - len(scores)))
+            
+            # 정답이 한 단어인 경우 단일 값으로 반환
+            if len(correct_words) == 1:
+                return scores[0]
             
             return scores
 
@@ -54,15 +61,19 @@ async def Q4AndQ7Score(text: str, correctAnswer: str):
         print(f"사용자 답변 단어들: {user_words}")
         print(f"정답 단어들: {correct_words}")
         
-        # 순서를 고려한 점수 계산
-        scores = checker.calculate_ordered_scores(user_words, correct_words)
+        # 점수 계산
+        result = checker.calculate_scores(user_words, correct_words)
         
         # 디버깅용 출력
-        for i, (word, score) in enumerate(zip(correct_words, scores)):
-            print(f"{i+1}번째 단어: 정답 '{word}' vs 입력 '{user_words[i] if i < len(user_words) else '없음'}' -> 점수: {score}")
+        if isinstance(result, list):
+            for i, (word, score) in enumerate(zip(correct_words, result)):
+                print(f"{i+1}번째 단어: 정답 '{word}' vs 입력 '{user_words[i] if i < len(user_words) else '없음'}' -> 점수: {score}")
+        else:
+            print(f"단일 단어: 정답 '{correct_words[0]}' vs 입력 '{user_words[0] if user_words else '없음'}' -> 점수: {result}")
         
-        return scores
+        return result
 
     except Exception as e:
-        print(f"Error in Q4_score: {str(e)}")
-        return [0, 0, 0]
+        print(f"Error in Q4AndQ7Score: {str(e)}")
+        # 에러 발생 시 정답 단어 개수에 따라 반환값 형식 결정
+        return 0 if len(checker.normalize_text(correctAnswer)) == 1 else [0] * len(checker.normalize_text(correctAnswer))
