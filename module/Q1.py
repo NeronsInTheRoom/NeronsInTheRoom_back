@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from openai import OpenAI
-from data import questions
+from data import questions, correctAnswer
 from datetime import datetime
 import os
 import json
@@ -27,6 +27,17 @@ def calculate_age(birth_date_str):
     today = datetime.today()
     age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
     return age
+
+# correctAnswer 리스트의 Q1 업데이트 함수
+def update_correct_answer_with_age(birth_date_str):
+    correct_age = calculate_age(birth_date_str)  # 실제 나이 계산
+    # print(f"Calculated age: {correct_age}")  # 디버깅 메시지 추가
+    
+    for answer in correctAnswer:
+        if answer["key"] == "Q1":
+            answer["value"] = str(correct_age)  # 나이를 문자열로 변환하여 저장
+            # print(f"Updated correctAnswer: {correctAnswer}")  # 업데이트 후 확인
+            break
 
 # 사용자의 나이 응답 파싱 함수
 def parse_age(answer):

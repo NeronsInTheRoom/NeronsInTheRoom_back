@@ -187,7 +187,7 @@ async def speech_to_text(birth_date: str=Form(...), file: UploadFile = File(...)
             status_code=400,
             detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
         )
-    
+        
     contents = await file.read()
     text = await transcribe_audio(contents)
     result = await q1_evaluation(birth_date, text)
