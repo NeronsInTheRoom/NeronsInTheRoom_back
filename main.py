@@ -191,12 +191,11 @@ async def speech_to_text(birth_date: str=Form(...), file: UploadFile = File(...)
     contents = await file.read()
     text = await transcribe_audio(contents)
     
-    score = await q1_evaluation(birth_date, text)
+    result = await q1_evaluation(birth_date, text)
     
-    return {
-        "score": score,
-        "answer": text  
-    }
+    print(f"result: {result}")
+    
+    return result
 
 @app.post("/Q2")
 async def speech_to_text(file: UploadFile = File(...)):
