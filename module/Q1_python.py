@@ -1,6 +1,25 @@
+from dotenv import load_dotenv
+from openai import OpenAI
 from data import questions, correctAnswer
 from datetime import datetime
+import os
+import json
 import re
+
+load_dotenv()
+
+# API_KEY 가져오기
+api_key = os.getenv("API_KEY")
+if api_key is None:
+    raise ValueError("API_KEY가 없습니다.")
+
+# GPT 모델 가져오기
+gpt_model = os.getenv("GPT")
+if gpt_model is None:
+    raise ValueError("GPT_Model이 없습니다.")
+
+# OpenAI 클라이언트 초기화 및 API 키 등록
+client = OpenAI(api_key=api_key)
 
 # 생년월일로부터 나이 계산 함수
 def calculate_age(birth_date_str):
@@ -22,23 +41,7 @@ def parse_age(answer):
     # 숫자+살 형태의 답변 처리
     num_match = re.search(r'(\d+)', answer)
     if num_match:
-        year_or_age = int(num_match.group(1))
-        
-        # 만약 1900년대, 2000년대 생년을 짧게 표현한 경우
-        if "년" in answer or "생" in answer:
-            today = datetime.today().year
-            # 100 이하의 숫자면 이를 연도로 간주하여 현재 연도로부터 나이를 계산
-            if year_or_age < 100:
-                birth_year = 1900 + year_or_age if year_or_age > 21 else 2000 + year_or_age
-                calculated_age = today - birth_year
-                return calculated_age, f"{calculated_age}살"
-            # 정확한 연도로 제공된 경우 (예: 1996년, 2001년)
-            elif year_or_age >= 1900:
-                calculated_age = today - year_or_age
-                return calculated_age, f"{calculated_age}살"
-        else:
-            # '나이+살' 형태로 숫자를 반환
-            return year_or_age, f"{year_or_age}살"
+        return int(num_match.group(1)), f"{num_match.group(1)}살"  # 숫자와 '숫자살' 형태를 함께 반환
     
     # 한글로 된 나이 (예: 스물아홉살)를 숫자로 변환
     korean_numbers = {
