@@ -9,7 +9,7 @@ from data import questions
 from data import correctAnswer
 from module.Q4andQ7 import Q4AndQ7Score
 from module.Q5andQ6 import Q5AndQ6Score
-# from module.tts import generate_audio
+from module.tts import generate_audio
 from data import explanations
 from data import scores
 
@@ -36,10 +36,10 @@ app.add_middleware(
 )
 
 # 사용시에만 주석제거
-# @app.post("/tts")
-# async def tts(text: str, filename: str):
-#     result = await generate_audio(text, filename)
-#     return result
+@app.post("/tts")
+async def tts(text: str, filename: str):
+    result = await generate_audio(text, filename)
+    return result
 
 # static 폴더 마운트
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -303,10 +303,3 @@ async def get_image(item_name: str):
         return FileResponse(image_path)
     else:
         return {"error": "Image not found"}
- 
-# 데이터 전달
-@app.get("/get_explanations")
-async def get_explanations(): return explanations
-
-@app.get("/get_scores")
-async def get_scores(): return scores
