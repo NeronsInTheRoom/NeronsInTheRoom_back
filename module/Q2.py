@@ -62,18 +62,6 @@ async def q2_evaluation(answer):
     - Fourth, compare today's date with the date the user answered.
     - Fifth, 1 point is assigned for each correct answer among year, month, day, and day of the week.
     
-    # Score
-    - The user's score is placed in the "score" type in the JSON output.
-    
-    # Answer
-    - The user's answer is placed in the "answer" type in the JSON output.
-    
-    # Questions
-    - The question {q2_question} received by the user is placed in the "questions" type in the JSON output.
-    
-    # CorreactAnswer
-    - The correct answer to the question is placed in the "correctAnswer" type in the JSON output.
-    
     # Output
     {{
         "score":"",

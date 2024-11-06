@@ -15,6 +15,7 @@ from data import scores
 
 # 성우현
 from module.Q1 import q1_evaluation
+from module.Q1_python import q1_p_evaluation
 from module.Q2 import q2_evaluation
 from module.Q3 import q3_evaluation
 from module.Q3_1 import q3_1_evaluation
@@ -190,7 +191,7 @@ async def speech_to_text(birth_date: str=Form(...), file: UploadFile = File(...)
         
     contents = await file.read()
     text = await transcribe_audio(contents)
-    result = await q1_evaluation(birth_date, text)
+    result = await q1_p_evaluation(birth_date, text)
     
     print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
