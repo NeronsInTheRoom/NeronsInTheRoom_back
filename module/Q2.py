@@ -4,6 +4,7 @@ from data import questions
 from datetime import datetime
 import os
 import json
+import re
 
 load_dotenv()
 
@@ -43,7 +44,27 @@ current_weekday = weekday_korean[today.strftime("%A")]
 # 오늘 날짜
 today = f"{current_year}년 {current_month}월 {current_day}일 {current_weekday}"
 
+# 사용자 답변에서 년, 월, 일, 요일 추출하기
+def parse_date_answer(answer):
+    # 연도, 월, 일, 요일에 해당하는 패턴을 정규식으로 추출
+    year_match = re.search(r'(\d{4})년', answer)
+    month_match = re.search(r'(\d{1,2})월', answer)
+    day_match = re.search(r'(\d{1,2})일', answer)
+    weekday_match = re.search(r'(월요일|화요일|수요일|목요일|금요일|토요일|일요일)', answer)
+    
+    # 매칭된 값을 변수에 저장, 매칭되지 않을 경우 None으로 설정
+    year = int(year_match.group(1)) if year_match else None
+    month = int(month_match.group(1)) if month_match else None
+    day = int(day_match.group(1)) if day_match else None
+    weekday = weekday_match.group(1) if weekday_match else None
+    
+    print(f"연도: {year}, 월: {month}, 일: {day}, 요일: {weekday}")
+    
+    return year, month, day, weekday
+
 async def q2_evaluation(answer):
+    # 사용자 답변에서 년, 월, 일, 요일 추출하기
+    year, month, day, weekday = parse_date_answer(answer)
     
     # Q2 질문 텍스트 가져오기
     q2_question = next((q["value"] for q in questions if q["key"] == "Q2"), None)
@@ -57,14 +78,26 @@ async def q2_evaluation(answer):
 
     # Task
     - First, the question received by the user is {q2_question}.
-    - Second, today is {today}.
-    - Third, the date the user answered is {answer}.
-    - Fourth, compare today's date with the date the user answered.
-    - Fifth, 1 point is assigned for each correct answer among year, month, day, and day of the week.
+    - Second, year comparison
+        - First, today is {current_year}.
+        - Second, the user answered today is {year}.
+        - Third, if {current_year} and {year} match, 1 point is assigned.
+    - Third, month comparison
+        - First, today is {current_month}.
+        - Second, the user answered today is {month}.
+        - Third, if {current_month} and {month} match, 1 point is assigned.
+    - Fourth, day comparison
+        - First, today is {current_day}.
+        - Second, today, as the user answered, is {day}.
+        - Third, if {current_day} and {day} match, 1 point is assigned.
+    - Fifth, compare days of the week
+        - First, today is {current_weekday}.
+        - Second, today as the user answered is {weekday}.
+        - Third, if {current_weekday} and {weekday} match, 1 point is assigned.
     
     # Output
     {{
-        "score":"",
+        "score":,
         "answer":"",
         "questions":"",
         "correctAnswer":""

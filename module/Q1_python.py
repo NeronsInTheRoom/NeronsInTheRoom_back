@@ -1,6 +1,25 @@
+from dotenv import load_dotenv
+from openai import OpenAI
 from data import questions, correctAnswer
 from datetime import datetime
+import os
+import json
 import re
+
+load_dotenv()
+
+# API_KEY 가져오기
+api_key = os.getenv("API_KEY")
+if api_key is None:
+    raise ValueError("API_KEY가 없습니다.")
+
+# GPT 모델 가져오기
+gpt_model = os.getenv("GPT")
+if gpt_model is None:
+    raise ValueError("GPT_Model이 없습니다.")
+
+# OpenAI 클라이언트 초기화 및 API 키 등록
+client = OpenAI(api_key=api_key)
 
 # 생년월일로부터 나이 계산 함수
 def calculate_age(birth_date_str):
@@ -22,28 +41,21 @@ def parse_age(answer):
     # 숫자+살 형태의 답변 처리
     num_match = re.search(r'(\d+)', answer)
     if num_match:
-        year_or_age = int(num_match.group(1))
-        
-        # 만약 1900년대, 2000년대 생년을 짧게 표현한 경우
-        if "년" in answer or "생" in answer:
-            today = datetime.today().year
-            # 100 이하의 숫자면 이를 연도로 간주하여 현재 연도로부터 나이를 계산
-            if year_or_age < 100:
-                birth_year = 1900 + year_or_age if year_or_age > 21 else 2000 + year_or_age
-                calculated_age = today - birth_year
-                return calculated_age, f"{calculated_age}살"
-            # 정확한 연도로 제공된 경우 (예: 1996년, 2001년)
-            elif year_or_age >= 1900:
-                calculated_age = today - year_or_age
-                return calculated_age, f"{calculated_age}살"
-        else:
-            # '나이+살' 형태로 숫자를 반환
-            return year_or_age, f"{year_or_age}살"
+        return int(num_match.group(1)), f"{num_match.group(1)}살"  # 숫자와 '숫자살' 형태를 함께 반환
     
-    # 한글로 된 나이 (예: 스물아홉살)를 숫자로 변환
+    # 한글로 된 나이 (예: 스물한살)를 숫자로 변환
     korean_numbers = {
+        "스물한": 21, "스물두": 22, "스물세": 23, "스물네": 24,
+        "서른한": 31, "서른두": 32, "서른세": 33, "서른네": 34,
+        "마흔한": 41, "마흔두": 42, "마흔세": 43, "마흔네": 44,
+        "쉰한": 51, "쉰두": 52, "쉰세": 53, "쉰네": 54,
+        "예순한": 61, "예순두": 62, "예순세": 63, "예순네": 64,
+        "일흔한": 71, "일흔두": 72, "일흔세": 73, "일흔네": 74,
+        "여든한": 81, "여든두": 82, "여든세": 83, "여든네": 84,
+        "아흔한": 91, "아흔두": 92, "아흔세": 93, "아흔네": 94,
         "하나": 1, "둘": 2, "셋": 3, "넷": 4, "다섯": 5, "여섯": 6, "일곱": 7, "여덟": 8, "아홉": 9,
-        "열": 10, "스물": 20, "서른": 30, "마흔": 40, "쉰": 50, "예순": 60, "일흔": 70, "여든": 80, "아흔": 90
+        "열": 10, "열한": 11, "열두": 12, "열세": 13, "열네": 14, "열다섯": 15, "열여섯": 16, "열일곱": 17, "열여덟": 18, "열아홉": 19,
+        "스물": 20, "서른": 30, "마흔": 40, "쉰": 50, "예순": 60, "일흔": 70, "여든": 80, "아흔": 90
     }
     age = 0
     for word in korean_numbers:
@@ -69,14 +81,15 @@ async def q1_p_evaluation(birth_date, answer):
     
     # 실제 나이와 입력 나이의 차이 계산
     age_difference = abs(correct_age - user_age)
+    print(f"절대값: {age_difference}")
     score = 1 if age_difference <= 2 else 0  # 차이가 2 이하면 1점, 그렇지 않으면 0점
 
     # JSON 출력 템플릿
     result = {
-        "score": str(score),
+        "score": score,
         "answer": numeric_answer,
         "questions": q1_question,
-        "correctAnswer": str(correct_age)
+        "correctAnswer": correct_age
     }
     
     return result
