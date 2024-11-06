@@ -41,7 +41,8 @@ async def q9_evaluation(answer):
     - First, the question received by the user is {q9_question}.
     - Second, the location where the user answered is {answer}.
     - Third, identify the presence of “vegetables” in the user’s answer.
-    - Fourth, if there are any "vegetables" identified, it returns a JSON object containing a "vegetable_list".
+    - Fourth, if there are duplicate vegetables, they are excluded.
+    - Fifth, if there are any "vegetables" identified, it returns a JSON object containing a "vegetable_list".
     
     # Output
     {{
@@ -64,6 +65,8 @@ async def q9_evaluation(answer):
 
     # 질문 생성 성공
     vegetable_list = result["vegetable_list"]
+    # 중복 제거 후 리스트
+    print(f"중복 제거 후 리스트: {vegetable_list}")
     num_vegetables = len(vegetable_list)
 
     # 점수 부여 기준에 따라 점수 계산
