@@ -10,7 +10,7 @@ from data import correctAnswer
 from module.Q4andQ7 import Q4AndQ7Score
 from module.Q5andQ6 import Q5AndQ6Score
 # from module.tts import generate_audio
-from module.tts_Q3_2 import generate_Q3_2
+# from module.tts_Q3_2 import generate_Q3_2
 from data import explanations
 from data import scores
 
@@ -49,21 +49,21 @@ app.add_middleware(
 #     result = await generate_Q3_1(text)
 #     return result
 
-@app.post("/tts_Q3_2")
-async def tts(text: str = Form(...)):
-    result = await generate_Q3_2(text)
+# @app.post("/tts_Q3_2")
+# async def tts(text: str = Form(...)):
+#     result = await generate_Q3_2(text)
     
-    # 오디오 파일 경로 설정
-    audio_file_path = Path("static/temp", f"Q3-2.wav")
+#     # 오디오 파일 경로 설정
+#     audio_file_path = Path("static/temp", f"Q3-2.wav")
 
-    # 오디오 파일이 존재할 경우 반환, 없으면 예외 발생
-    if audio_file_path.exists():
-        return FileResponse(audio_file_path)
-    else:
-        raise HTTPException(
-            status_code=404,
-            detail="오디오 파일을 찾을 수 없습니다."
-        )
+#     # 오디오 파일이 존재할 경우 반환, 없으면 예외 발생
+#     if audio_file_path.exists():
+#         return FileResponse(audio_file_path)
+#     else:
+#         raise HTTPException(
+#             status_code=404,
+#             detail="오디오 파일을 찾을 수 없습니다."
+        # )
 
 # static 폴더 마운트
 app.mount("/static", StaticFiles(directory="static"), name="static")

@@ -30,19 +30,30 @@ async def Q4AndQ7Score(text: str, correctAnswer: str):
 
         @staticmethod
         def calculate_scores(user_words, correct_words):
-            """단어 개수에 따라 유동적으로 점수 계산"""
+            """순서 무관하게 단어 매칭하여 점수 계산"""
             scores = []
+            used_user_indices = set()  # 이미 매칭된 사용자 단어 인덱스 추적
             
-            # 각 위치별로 점수 계산
-            for i, correct_word in enumerate(correct_words):
-                if i < len(user_words):  # 사용자가 해당 위치에 단어를 입력했는지 확인
-                    similarity_score = WordSimilarityChecker.calculate_word_similarity(
-                        correct_word, user_words[i]
-                    )
-                    scores.append(similarity_score)
-            
-            # 입력되지 않은 나머지 정답 단어들에 대해 0점 처리
-            scores.extend([0] * (len(correct_words) - len(scores)))
+            # 각 정답 단어에 대해
+            for correct_word in correct_words:
+                max_score = 0
+                best_match_index = -1
+                
+                # 아직 매칭되지 않은 모든 사용자 단어와 비교
+                for i, user_word in enumerate(user_words):
+                    if i not in used_user_indices:
+                        similarity_score = WordSimilarityChecker.calculate_word_similarity(
+                            correct_word, user_word
+                        )
+                        if similarity_score > max_score:
+                            max_score = similarity_score
+                            best_match_index = i
+                
+                # 매칭된 단어가 있으면 해당 인덱스를 사용됨으로 표시
+                if best_match_index != -1:
+                    used_user_indices.add(best_match_index)
+                
+                scores.append(max_score)
             
             # 정답이 한 단어인 경우 단일 값으로 반환
             if len(correct_words) == 1:
@@ -66,8 +77,16 @@ async def Q4AndQ7Score(text: str, correctAnswer: str):
         
         # 디버깅용 출력
         if isinstance(result, list):
-            for i, (word, score) in enumerate(zip(correct_words, result)):
-                print(f"{i+1}번째 단어: 정답 '{word}' vs 입력 '{user_words[i] if i < len(user_words) else '없음'}' -> 점수: {score}")
+            matched_words = []
+            scores = []
+            for i, score in enumerate(result):
+                correct_word = correct_words[i]
+                matched_user_word = "없음"
+                for j, user_word in enumerate(user_words):
+                    if checker.calculate_word_similarity(correct_word, user_word) == 1:
+                        matched_user_word = user_word
+                        break
+                print(f"정답 단어 '{correct_word}' -> 매칭된 단어: '{matched_user_word}', 점수: {score}")
         else:
             print(f"단일 단어: 정답 '{correct_words[0]}' vs 입력 '{user_words[0] if user_words else '없음'}' -> 점수: {result}")
         
@@ -75,5 +94,4 @@ async def Q4AndQ7Score(text: str, correctAnswer: str):
 
     except Exception as e:
         print(f"Error in Q4AndQ7Score: {str(e)}")
-        # 에러 발생 시 정답 단어 개수에 따라 반환값 형식 결정
         return 0 if len(checker.normalize_text(correctAnswer)) == 1 else [0] * len(checker.normalize_text(correctAnswer))
