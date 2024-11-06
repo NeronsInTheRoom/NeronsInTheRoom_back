@@ -44,7 +44,7 @@ def parse_age(answer):
     # 숫자+살 형태의 답변 처리
     num_match = re.search(r'(\d+)', answer)
     if num_match:
-        return int(num_match.group(1))
+        return int(num_match.group(1)), f"{num_match.group(1)}살"  # 숫자와 '숫자살' 형태를 함께 반환
     
     # 한글로 된 나이 (예: 스물아홉살)를 숫자로 변환
     korean_numbers = {
@@ -55,8 +55,10 @@ def parse_age(answer):
     for word in korean_numbers:
         if word in answer:
             age += korean_numbers[word]
-    return age if age > 0 else None
+    
+    return (age if age > 0 else None), (f"{age}살" if age > 0 else None)  # 숫자와 '숫자살' 형태를 함께 반환
 
+# Q1 평가 함수
 async def q1_evaluation(birth_date, answer):
     # 실제 나이 계산
     correct_age = calculate_age(birth_date)
@@ -67,7 +69,7 @@ async def q1_evaluation(birth_date, answer):
         raise ValueError("Q1 질문을 찾을 수 없습니다.")
     
     # 사용자의 나이 응답 파싱
-    user_age = parse_age(answer)
+    user_age, numeric_answer = parse_age(answer)  # numeric_answer는 "숫자살" 형태의 문자열
     if user_age is None:
         raise ValueError("사용자의 답변에서 나이를 파악할 수 없습니다.")
     
@@ -91,7 +93,7 @@ async def q1_evaluation(birth_date, answer):
     # Output
     {{
         "score":"",
-        "answer":"{answer}",
+        "answer":"{numeric_answer}",
         "questions":"{q1_question}",
         "correctAnswer":"{correct_age}"
         
@@ -103,7 +105,7 @@ async def q1_evaluation(birth_date, answer):
         model=gpt_model,
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": answer}
+            {"role": "user", "content": numeric_answer}  # 한글 대신 숫자 변환 형태 사용
         ],
         temperature=0
     )
