@@ -43,7 +43,7 @@ async def q3_evaluation(place, answer):
     
     # Output
     {{
-        "score":"",
+        "score":,
         "answer":"{answer}",
         "questions":"{q3_question}",
         "correctAnswer":"{place}"
@@ -66,6 +66,7 @@ async def q3_evaluation(place, answer):
     try:
         # 결과를 JSON 형식으로 로드하여 반환
         result = json.loads(response_content)
+        print(f"ScoreType: {type(result['score'])}")
         return result
     except json.JSONDecodeError:
         print("응답이 JSON 형식이 아닙니다. 응답 내용:", response_content)

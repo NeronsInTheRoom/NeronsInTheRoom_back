@@ -40,7 +40,7 @@ async def q3_1_evaluation(place, answer):
     
     # Output
     {{
-        "score":"",
+        "score":,
         "answer":"{answer}",
         "questions":"{q3_1_question}",
         "correctAnswer":"{place}"
