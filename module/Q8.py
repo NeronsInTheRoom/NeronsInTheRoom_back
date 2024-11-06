@@ -65,7 +65,7 @@ async def q8_evaluation(image_name, answer):
     
     # Output
     {{
-        "score":"",
+        "score":,
         "answer":"{answer}",
         "questions":"{q8_question}",
         "correctAnswer":"{correct_answer_korean}"
