@@ -86,10 +86,6 @@ async def q1_evaluation(birth_date, answer):
     - Fifth, the margin of error for age can be up to 2 years.
     - Sixth, 1 point for a correct answer and 0 points for an incorrect answer are assigned to the "score" type of the JSON output.
     
-    # Score
-    - Assign only 1 and 0.
-    - The user's score is placed in the "score" type in the JSON output.
-    
     # Output
     {{
         "score":"",
