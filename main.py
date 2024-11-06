@@ -17,6 +17,7 @@ from data import scores
 from module.Q1 import q1_evaluation
 from module.Q1_python import q1_p_evaluation
 from module.Q2 import q2_evaluation
+from module.Q2_python import q2_p_evaluation
 from module.Q3 import q3_evaluation
 from module.Q3_1 import q3_1_evaluation
 from module.Q8 import q8_evaluation
@@ -204,10 +205,10 @@ async def speech_to_text(file: UploadFile = File(...)):
             status_code=400,
             detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
         )
-    
+            
     contents = await file.read()
     text = await transcribe_audio(contents)
-    result = await q2_evaluation(text)
+    result = await q2_p_evaluation(text)
     
     print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
