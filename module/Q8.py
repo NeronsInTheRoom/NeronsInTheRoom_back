@@ -61,11 +61,11 @@ async def q8_evaluation(image_name, answer):
     - Expected correct answers for this image include the following keywords: {keywords_str}.
     - The user's answer is "{answer}".
     - Evaluate whether "{answer}" matches any of the correct keywords associated with "{image_name}".
-    - If "{answer}" is similar to one of the keywords, assign 1 point in JSON format. If there is no match, assign 0 points.
+    - If "{answer}" is similar to one of the keywords, give "y" in JSON format. If no match is found, "n" is given.
     
     # Output
     {{
-        "score":,
+        "isTrue":,
         "answer":"{answer}",
         "questions":"{q8_question}",
         "correctAnswer":"{correct_answer_korean}"
