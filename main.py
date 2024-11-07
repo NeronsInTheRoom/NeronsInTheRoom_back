@@ -23,6 +23,7 @@ from module.Q3 import q3_evaluation
 from module.Q3_1 import q3_1_evaluation
 from module.Q8 import q8_evaluation
 from module.Q8_1 import q8_1_evaluation
+from module.Q8_1_jamo import q8_1_jamo_evaluation
 from module.Q9 import q9_evaluation
 from data import questions
 import os
@@ -299,7 +300,7 @@ async def speech_to_text_alternate(file: UploadFile = File(...)):
     
     contents = await file.read()
     text = await transcribe_audio(contents)
-    result = await q8_1_evaluation(text)
+    result = await q8_1_jamo_evaluation(text)
     
     print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
