@@ -41,7 +41,7 @@ def parse_age(answer):
     # 숫자+살 형태의 답변 처리
     num_match = re.search(r'(\d+)', answer)
     if num_match:
-        return int(num_match.group(1)), f"{num_match.group(1)}살"  # 숫자와 '숫자살' 형태를 함께 반환
+        return int(num_match.group(1))
     
     # 한글로 된 나이 (예: 스물한살)를 숫자로 변환
     korean_numbers = {
@@ -62,7 +62,7 @@ def parse_age(answer):
         if word in answer:
             age += korean_numbers[word]
     
-    return (age if age > 0 else None), (f"{age}살" if age > 0 else None)  # 숫자와 '숫자살' 형태를 함께 반환
+    return (age if age > 0 else None)
 
 # Q1 평가 함수
 async def q1_p_evaluation(birth_date, answer):
@@ -75,7 +75,7 @@ async def q1_p_evaluation(birth_date, answer):
         raise ValueError("Q1 질문을 찾을 수 없습니다.")
     
     # 사용자의 나이 응답 파싱
-    user_age, numeric_answer = parse_age(answer)  # numeric_answer는 "숫자살" 형태의 문자열
+    user_age = parse_age(answer)
     if user_age is None:
         raise ValueError("사용자의 답변에서 나이를 파악할 수 없습니다.")
     
@@ -87,7 +87,7 @@ async def q1_p_evaluation(birth_date, answer):
     # JSON 출력 템플릿
     result = {
         "score": score,
-        "answer": numeric_answer,
+        "answer": answer,
         "questions": q1_question,
         "correctAnswer": correct_age
     }
