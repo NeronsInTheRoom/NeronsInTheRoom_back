@@ -45,11 +45,6 @@ app.add_middleware(
 #     result = await generate_audio(text, filename)
 #     return result
 
-# @app.post("/tts_Q3_1")
-# async def tts(text: str = Form(...)):
-#     result = await generate_Q3_1(text)
-#     return result
-
 # @app.post("/tts_Q3_2")
 # async def tts(text: str = Form(...)):
 #     result = await generate_Q3_2(text)
