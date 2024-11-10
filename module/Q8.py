@@ -37,7 +37,7 @@ image_name_korean = {
     "stamp": "도장"
 }
 
-async def q8_evaluation(image_name, answer):
+async def question8(image_name, answer):
     
     # Q8 질문 텍스트 가져오기
     q8_question = next((q["value"] for q in questions if q["key"] == "Q8"), None)
