@@ -21,7 +21,7 @@ from module.Q2 import q2_evaluation
 from module.Q2_python import q2_p_evaluation
 from module.Q3 import q3_evaluation
 from module.Q3_1 import q3_1_evaluation
-from module.Q3_jamo import q3_1_jamo_evaluation
+from module.Q3_1_jamo import q3_1_jamo_evaluation
 from module.Q8 import q8_evaluation
 from module.Q8_1 import q8_1_evaluation
 from module.Q8_1_jamo import q8_1_jamo_evaluation

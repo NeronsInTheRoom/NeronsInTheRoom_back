@@ -66,8 +66,10 @@ async def q3_1_jamo_evaluation(place, answer):
     - First, the question received by the user is {q3_1_question}.
     - Second, the user's actual location is {place}.
     - Third, the location where the user answered is {answer}.
-    - Fourth, compare whether the user's answer "{answer}" matches the user's actual place "{place}".
-    - Fifth, if "{answer}" is related to or within a "{place}", only that place will be assigned the user's answer in JSON format.
+    - Fourth, check whether the user's answer "{answer}" exactly matches the user's actual location "{place}".
+    - Fifth, determine whether the user accurately referred to the actual location rather than a related location or a place performing a certain function.
+    - Sixth, if "{answer}" matches "{place}", the user's answer will be assigned to only that place in JSON format.
+    - Seventh, if not, all of the user's responses are assigned to JSON format.
 
     # Output
     {{
