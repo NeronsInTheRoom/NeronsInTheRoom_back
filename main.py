@@ -21,6 +21,7 @@ from module.Q2 import q2_evaluation
 from module.Q2_python import q2_p_evaluation
 from module.Q3 import q3_evaluation
 from module.Q3_1 import q3_1_evaluation
+from module.Q3_jamo import q3_1_jamo_evaluation
 from module.Q8 import q8_evaluation
 from module.Q8_1 import q8_1_evaluation
 from module.Q8_1_jamo import q8_1_jamo_evaluation
@@ -264,7 +265,8 @@ async def speech_to_text_alternate(place: str = Form(...), file: UploadFile = Fi
     
     contents = await file.read()
     text = await transcribe_audio(contents)
-    result = await q3_1_evaluation(place, text)
+    # print(f"후처리 전 사용자 응답: {text}")
+    result = await q3_1_jamo_evaluation(place, text)
     
     print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
