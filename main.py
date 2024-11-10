@@ -20,6 +20,7 @@ from module.Q1_python import q1_p_evaluation
 from module.Q1_llm import q1_llm_evaluation
 from module.Q2 import q2_evaluation
 from module.Q2_python import q2_p_evaluation
+from module.Q2_jamo import q2_jamo_evaluation
 from module.Q3 import q3_evaluation
 from module.Q3_1 import q3_1_evaluation
 from module.Q3_1_jamo import q3_1_jamo_evaluation
@@ -234,7 +235,7 @@ async def speech_to_text(file: UploadFile = File(...)):
             
     contents = await file.read()
     text = await transcribe_audio(contents)
-    result = await q2_p_evaluation(text)
+    result = await q2_jamo_evaluation(text)
     
     print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
