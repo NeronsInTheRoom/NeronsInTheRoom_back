@@ -19,7 +19,7 @@ if gpt_model is None:
 # OpenAI 클라이언트 초기화 및 API 키 등록
 client = OpenAI(api_key=api_key)
 
-async def q3_evaluation(place, answer):
+async def question3(place, answer):
     
     # Q3 질문 텍스트 가져오기
     q3_question = next((q["value"] for q in questions if q["key"] == "Q3"), None)

@@ -15,20 +15,13 @@ from data import explanations
 from data import scores
 
 # 성우현
-from module.Q1 import q1_evaluation
-from module.Q1_python import q1_p_evaluation
-from module.Q1_llm import q1_llm_evaluation
-from module.Q2 import q2_evaluation
-from module.Q2_python import q2_p_evaluation
-from module.Q2_jamo import q2_jamo_evaluation
-from module.Q3 import q3_evaluation
-from module.Q3_1 import q3_1_evaluation
-from module.Q3_1_jamo import q3_1_jamo_evaluation
-from module.Q8 import q8_evaluation
-from module.Q8_1 import q8_1_evaluation
-from module.Q8_1_jamo import q8_1_jamo_evaluation
-from module.Q9 import q9_evaluation
-from module.Q9_jamo import q9_jamo_evaluation
+from module.Q1 import question1
+from module.Q2 import question2
+from module.Q3 import question3
+from module.Q3_1 import question3_1
+from module.Q8 import question8
+from module.Q8_1 import question8_1
+from module.Q9 import question9
 from data import questions
 import os
 import json
@@ -219,7 +212,7 @@ async def speech_to_text(birth_date: str=Form(...), file: UploadFile = File(...)
         
     contents = await file.read()
     text = await transcribe_audio(contents)
-    result = await q1_llm_evaluation(birth_date, text)
+    result = await question1(birth_date, text)
     
     print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
@@ -235,7 +228,7 @@ async def speech_to_text(file: UploadFile = File(...)):
             
     contents = await file.read()
     text = await transcribe_audio(contents)
-    result = await q2_jamo_evaluation(text)
+    result = await question2(text)
     
     print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
@@ -251,7 +244,7 @@ async def speech_to_text(place: str = Form(...), file: UploadFile = File(...)):
     
     contents = await file.read()
     text = await transcribe_audio(contents)
-    result = await q3_evaluation(place, text)
+    result = await question3(place, text)
     
     print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
@@ -268,7 +261,7 @@ async def speech_to_text_alternate(place: str = Form(...), file: UploadFile = Fi
     contents = await file.read()
     text = await transcribe_audio(contents)
     # print(f"후처리 전 사용자 응답: {text}")
-    result = await q3_1_jamo_evaluation(place, text)
+    result = await question3_1(place, text)
     
     print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
@@ -284,7 +277,7 @@ async def speech_to_text(image_name: str = Form(...), file: UploadFile = File(..
     
     contents = await file.read()
     text = await transcribe_audio(contents)
-    result = await q8_evaluation(image_name, text)
+    result = await question8(image_name, text)
     
     print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
@@ -300,7 +293,7 @@ async def speech_to_text_alternate(file: UploadFile = File(...)):
     
     contents = await file.read()
     text = await transcribe_audio(contents)
-    result = await q8_1_jamo_evaluation(text)
+    result = await question8_1(text)
     
     print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
@@ -316,7 +309,7 @@ async def speech_to_text(file: UploadFile = File(...)):
     
     contents = await file.read()
     text = await transcribe_audio(contents)
-    result = await q9_jamo_evaluation(text)
+    result = await question9(text)
 
     print(f"result: {json.dumps(result, indent=4, ensure_ascii=False)}")
     
