@@ -1,97 +1,110 @@
-from jamo import h2j, j2hcj
-import re
+from dotenv import load_dotenv
+from openai import OpenAI
+from data import questions, correctAnswer
+import os
+import json
 
-async def Q4AndQ7Score(text: str, correctAnswer: str):
-    class WordSimilarityChecker:
-        @staticmethod
-        def normalize_text(text):
-            """쉼표나 공백으로 구분된 문자열을 단어 리스트로 변환"""
-            words = re.split('[,\s]+', text.strip())
-            return [word.strip() for word in words if word.strip()]
+load_dotenv()
 
-        @staticmethod
-        def decompose_hangul(word):
-            """한글 단어를 자모 단위로 분해"""
-            return list(j2hcj(h2j(word)))
+# API_KEY 가져오기
+api_key = os.getenv("API_KEY")
+if api_key is None:
+    raise ValueError("API_KEY가 없습니다.")
 
-        @staticmethod
-        def calculate_word_similarity(word1, word2):
-            """두 단어 간의 자모 유사도 계산"""
-            jamo1 = WordSimilarityChecker.decompose_hangul(word1)
-            jamo2 = WordSimilarityChecker.decompose_hangul(word2)
-            
-            max_len = max(len(jamo1), len(jamo2))
-            min_len = min(len(jamo1), len(jamo2))
-            
-            matches = sum(1 for i in range(min_len) if jamo1[i] == jamo2[i])
-            similarity = matches / max_len
-            
-            return 1 if similarity >= 0.8 else 0
+# GPT 모델 가져오기
+gpt_model = os.getenv("GPT")
+if gpt_model is None:
+    raise ValueError("GPT_Model이 없습니다.")
 
-        @staticmethod
-        def calculate_scores(user_words, correct_words):
-            """순서 무관하게 단어 매칭하여 점수 계산"""
-            scores = []
-            used_user_indices = set()  # 이미 매칭된 사용자 단어 인덱스 추적
-            
-            # 각 정답 단어에 대해
-            for correct_word in correct_words:
-                max_score = 0
-                best_match_index = -1
-                
-                # 아직 매칭되지 않은 모든 사용자 단어와 비교
-                for i, user_word in enumerate(user_words):
-                    if i not in used_user_indices:
-                        similarity_score = WordSimilarityChecker.calculate_word_similarity(
-                            correct_word, user_word
-                        )
-                        if similarity_score > max_score:
-                            max_score = similarity_score
-                            best_match_index = i
-                
-                # 매칭된 단어가 있으면 해당 인덱스를 사용됨으로 표시
-                if best_match_index != -1:
-                    used_user_indices.add(best_match_index)
-                
-                scores.append(max_score)
-            
-            # 정답이 한 단어인 경우 단일 값으로 반환
-            if len(correct_words) == 1:
-                return scores[0]
-            
-            return scores
+# OpenAI 클라이언트 초기화 및 API 키 등록
+client = OpenAI(api_key=api_key)
 
+async def Q4AndQ7Score(text: str):
+
+    # Q4 문제와 정답 가져오기
+    q4_question = next((q["value"] for q in questions if q["key"] == "Q4"), None)
+    if q4_question is None:
+        raise ValueError("Q4 질문을 찾을 수 없습니다.")
+    q4_answer = next((a["value"] for a in correctAnswer if a["key"] == "Q4"), None)
+    if q4_answer is None:
+        raise ValueError("Q4 정답을 찾을 수 없습니다.")
+
+    prompt = f"""
+            
+    # Role
+    You are an expert in evaluating Korean text similarity and scoring responses.
+    Your task is to compare user answers with correct answers and score them based on morphological similarity.
+
+    # Important Scoring Rules
+    1. Score is based on word presence, NOT order
+    2. For scoring process:
+    - Each word in user's answer can match ANY word in correct answer
+    - Typos that clearly intended the correct answer should be accepted (e.g., '기챠' for '기차', '호낭이' for '호랑이')
+    - A word can only be matched once
+    3. Final score array MUST follow the correct answer sequence
+    4. Return format:
+    - Single word: integer (0 or 1)
+    - Multiple words: array of integers (0s and 1s) matching CORRECT ANSWER order
+    - Example: [0, 1, 1] ✓  [0.0, 1.0, 1.0] ✗
+
+    # Scoring Process
+    1. For each word in the CORRECT ANSWER order:
+    - Check if this word appears anywhere in user's answer
+    - If found (allowing for typos), mark 1
+    - If not found, mark 0
+    2. Present scores in the CORRECT ANSWER order
+
+    # Examples
+    Correct: "기차, 호랑이, 사과"
+    User: "사과, 자동차, 호랑이"
+    Score: [0, 1, 1] 
+    Explanation: 
+    - 기차: Not found → 0 (integer)
+    - 호랑이: Found → 1 (integer)
+    - 사과: Found → 1 (integer)
+
+    Correct: "기차"
+    User: "기챠"
+    Score: 1 (integer, not 1.0)
+
+    # Context
+    - Question: {q4_question} 
+    - Correct Answer: {q4_answer}
+    - User's Response: {text}
+
+    # Output
+    {{
+        "score":"",
+        "answer": "{text}"
+    }}
+
+    CRITICAL NOTE: 
+    1. Word order in user's answer does NOT matter for scoring
+    2. Each correct word only needs to appear SOMEWHERE in the answer
+    3. Final score array MUST match the CORRECT ANSWER sequence
+    4. Example: if correct is "기차, 호랑이, 사과" and user writes "사과, 자동차, 호랑이", 
+    the score should be [0, 1, 1] because:
+    - 기차 is not present (0)
+    - 호랑이 is present (1)
+    - 사과 is present (1)
+    """
+
+    # API 호출
+    completion = client.chat.completions.create(
+        model=gpt_model,
+        messages=[
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": text}
+        ],
+        temperature=0
+    )
+
+    response_content = completion.choices[0].message.content
+    
     try:
-        checker = WordSimilarityChecker()
-        
-        # 문자열을 단어 리스트로 변환
-        user_words = checker.normalize_text(text)
-        correct_words = checker.normalize_text(correctAnswer)
-        
-        # 디버깅용 출력
-        print(f"사용자 답변 단어들: {user_words}")
-        print(f"정답 단어들: {correct_words}")
-        
-        # 점수 계산
-        result = checker.calculate_scores(user_words, correct_words)
-        
-        # 디버깅용 출력
-        if isinstance(result, list):
-            matched_words = []
-            scores = []
-            for i, score in enumerate(result):
-                correct_word = correct_words[i]
-                matched_user_word = "없음"
-                for j, user_word in enumerate(user_words):
-                    if checker.calculate_word_similarity(correct_word, user_word) == 1:
-                        matched_user_word = user_word
-                        break
-                print(f"정답 단어 '{correct_word}' -> 매칭된 단어: '{matched_user_word}', 점수: {score}")
-        else:
-            print(f"단일 단어: 정답 '{correct_words[0]}' vs 입력 '{user_words[0] if user_words else '없음'}' -> 점수: {result}")
-        
+        # 결과를 JSON 형식으로 로드하여 반환
+        result = json.loads(response_content)
         return result
-
-    except Exception as e:
-        print(f"Error in Q4AndQ7Score: {str(e)}")
-        return 0 if len(checker.normalize_text(correctAnswer)) == 1 else [0] * len(checker.normalize_text(correctAnswer))
+    except json.JSONDecodeError:
+        print("응답이 JSON 형식이 아닙니다. 응답 내용:", response_content)
+        return None

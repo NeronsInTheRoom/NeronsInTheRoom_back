@@ -8,7 +8,8 @@ from module.stt import transcribe_audio
 from data import questions
 from data import correctAnswer
 from module.Q4andQ7 import Q4AndQ7Score
-from module.Q5andQ6 import Q5AndQ6Score
+from module.Q5 import Q5Score
+from module.Q6 import Q6Score
 # from module.tts import generate_audio
 # from module.tts_Q3_2 import generate_Q3_2
 from data import explanations
@@ -65,7 +66,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/start")
-async def get_questions():
+async def get_questions(type: str):
     try:
         # static/audio 디렉토리의 경로
         audio_dir = Path("static/audio")
@@ -76,27 +77,41 @@ async def get_questions():
             audio_files = [
                 {
                     "filename": file.name,
-                    "url": f"http://localhost:8000/static/audio/{file.name}"  # 전체 URL 제공
+                    "url": f"http://localhost:8000/static/audio/{file.name}"
                 }
                 for file in audio_dir.glob("*.wav")
             ]
         
-        return {
-            "questions": questions, 
-            "correctAnswer": correctAnswer,
-            "audio_files": audio_files,
-            "explanations": explanations,
-            "maxScores": scores
-        }
+        if type == "full":
+            return {
+                "questions": questions,
+                "correctAnswer": correctAnswer,
+                "audio_files": audio_files,
+                "explanations": explanations,
+                "maxScores": scores
+            }
+        elif type == "simple":
+            simple_questions = [q for q in questions if q["key"] in [
+                "Q4", "Q5", "Q5-1", "Q6", "Q6-1", 
+                "Q7", "Q7-1", "Q7-2", "Q7-3"
+            ]]
+            
+            return {
+                "questions": simple_questions,
+                "correctAnswer": correctAnswer,
+                "audio_files": audio_files,
+                "explanations": explanations,
+                "maxScores": scores
+            }
     
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"데이터를 가져오는 중 오류가 발생했습니다: {str(e)}"
         )
-    
+
 # Q4, Q7 스코어 계산
-async def Q4andQ7(file: UploadFile, correctAnswer: str):
+async def Q4andQ7(file: UploadFile):
 
     if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
         raise HTTPException(
@@ -107,16 +122,12 @@ async def Q4andQ7(file: UploadFile, correctAnswer: str):
     contents = await file.read()
         
     text = await transcribe_audio(contents)
-    correctAnswer = correctAnswer
-    score = await Q4AndQ7Score(text, correctAnswer)
+    score = await Q4AndQ7Score(text)
         
-    return {
-        "score": score,
-        "answer": text  
-    }
+    return score
 
-# Q5, Q6 스코어 계산
-async def Q5andQ6(file: UploadFile, correctAnswer: str):
+# Q5
+async def Q5(file: UploadFile, questionNumber):
     
     if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
         raise HTTPException(
@@ -127,83 +138,94 @@ async def Q5andQ6(file: UploadFile, correctAnswer: str):
     contents = await file.read()
         
     text = await transcribe_audio(contents)
-    correctAnswer = correctAnswer
-    score = await Q5AndQ6Score(text, correctAnswer)
+    score = await Q5Score(text, questionNumber)
         
-    return {
-        "score": score,
-        "answer": text  
-    }
+    return score
+
+# Q6
+async def Q6(file: UploadFile, questionNumber):
+    
+    if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac')):
+        raise HTTPException(
+            status_code=400,
+            detail="지원하지 않는 파일 형식입니다. WAV, MP3, M4A, FLAC 파일만 지원합니다."
+        )
+    
+    contents = await file.read()
+        
+    text = await transcribe_audio(contents)
+    score = await Q6Score(text, questionNumber)
+        
+    return score
     
 @app.post("/Q4")
 async def speech_to_text_q4(
     file: UploadFile = File(...), 
-    correctAnswer: str = Form(...)
 ):
     # Q3-1.wav 파일 삭제 - 이다정 추가
     temp_file_path = Path("static/temp/Q3-2.wav")
     if temp_file_path.exists():
         temp_file_path.unlink()  # 파일 삭제
 
-    return await Q4andQ7(file, correctAnswer)
+    return await Q4andQ7(file)
 
 
 @app.post("/Q5")
 async def speech_to_text_q5(
     file: UploadFile = File(...), 
-    correctAnswer: str = Form(...)
 ):
-    return await Q5andQ6(file, correctAnswer)
+    questionNumber = "Q5"
+
+    return await Q5(file, questionNumber)
     
 
 @app.post("/Q5-1")
-async def speech_to_text_q5(
+async def speech_to_text_q5_1(
     file: UploadFile = File(...), 
-    correctAnswer: str = Form(...)
 ):
-    return await Q5andQ6(file, correctAnswer)
+    questionNumber = "Q5-1"
+
+    return await Q5(file, questionNumber)
 
 @app.post("/Q6")
-async def speech_to_text_q5(
+async def speech_to_text_q6(
     file: UploadFile = File(...), 
-    correctAnswer: str = Form(...)
 ):
-    return await Q5andQ6(file, correctAnswer)
+    questionNumber = "Q6"
+
+    return await Q6(file, questionNumber)
 
 @app.post("/Q6-1")
-async def speech_to_text_q5(
+async def speech_to_text_q6_1(
     file: UploadFile = File(...), 
-    correctAnswer: str = Form(...)
 ):
-    return await Q5andQ6(file, correctAnswer)
+    questionNumber = "Q6-1"
+
+    return await Q6(file, questionNumber)
 
 @app.post("/Q7")
 async def speech_to_text_q7(
     file: UploadFile = File(...), 
-    correctAnswer: str = Form(...)
 ):
-    return await Q4andQ7(file, correctAnswer)
+    return await Q4andQ7(file)
 
 @app.post("/Q7-1")
 async def speech_to_text_q7(
     file: UploadFile = File(...), 
-    correctAnswer: str = Form(...)
 ):
-    return await Q4andQ7(file, correctAnswer)
+    return await Q4andQ7(file)
 
 @app.post("/Q7-2")
 async def speech_to_text_q7(
     file: UploadFile = File(...), 
-    correctAnswer: str = Form(...)
 ):
-    return await Q4andQ7(file, correctAnswer)
+    return await Q4andQ7(file)
 
 @app.post("/Q7-3")
 async def speech_to_text_q7(
     file: UploadFile = File(...), 
-    correctAnswer: str = Form(...)
 ):
-    return await Q4andQ7(file, correctAnswer)
+    return await Q4andQ7(file)
 
 @app.post("/Q1")
 async def speech_to_text(birth_date: str=Form(...), file: UploadFile = File(...)):
