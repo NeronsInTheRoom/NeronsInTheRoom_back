@@ -12,6 +12,8 @@ from module.Q5 import Q5Score
 from module.Q6 import Q6Score
 # from module.tts import generate_audio
 # from module.tts_Q3_2 import generate_Q3_2
+from module.googleTTS_Q3_2 import generate_Q3_2
+from module.googleTTS import generate_audio
 from data import explanations
 from data import scores
 
@@ -38,26 +40,26 @@ app.add_middleware(
 )
 
 # 사용시에만 주석제거
-# @app.post("/tts")
-# async def tts(text: str, filename: str):
-#     result = await generate_audio(text, filename)
-#     return result
+@app.post("/tts")
+async def tts(text: str, filename: str):
+    result = await generate_audio(text, filename)
+    return result
 
-# @app.post("/tts_Q3_2")
-# async def tts(text: str = Form(...)):
-#     result = await generate_Q3_2(text)
+@app.post("/tts_Q3_2")
+async def tts(text: str = Form(...)):
+    result = await generate_Q3_2(text)
     
-#     # 오디오 파일 경로 설정
-#     audio_file_path = Path("static/temp", f"Q3-2.wav")
+    # 오디오 파일 경로 설정
+    audio_file_path = Path("static/temp", f"Q3-2.wav")
 
-#     # 오디오 파일이 존재할 경우 반환, 없으면 예외 발생
-#     if audio_file_path.exists():
-#         return FileResponse(audio_file_path)
-#     else:
-#         raise HTTPException(
-#             status_code=404,
-#             detail="오디오 파일을 찾을 수 없습니다."
-        # )
+    # 오디오 파일이 존재할 경우 반환, 없으면 예외 발생
+    if audio_file_path.exists():
+        return FileResponse(audio_file_path)
+    else:
+        raise HTTPException(
+            status_code=404,
+            detail="오디오 파일을 찾을 수 없습니다."
+        )
 
 # static 폴더 마운트
 app.mount("/static", StaticFiles(directory="static"), name="static")
