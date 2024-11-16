@@ -91,8 +91,7 @@ async def get_questions(type: str):
             }
         elif type == "simple":
             simple_questions = [q for q in questions if q["key"] in [
-                "Q4", "Q5", "Q5-1", "Q6", "Q6-1", 
-                "Q7", "Q7-1", "Q7-2", "Q7-3"
+                "Q4", "Q2", "Q5", "Q5-1", "Q7", "Q7-1", "Q7-2", "Q7-3"
             ]]
             
             return {
