@@ -122,7 +122,10 @@ async def Q4andQ7(file: UploadFile):
     text = await transcribe_audio(contents)
     score = await Q4AndQ7Score(text)
         
-    return score
+    return {
+        "score": score,
+        "answer": text  
+    }
 
 # Q5
 async def Q5(file: UploadFile, questionNumber):
