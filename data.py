@@ -57,7 +57,7 @@ scores = [
     {"key": "Q5-1", "value": "1"},
     {"key": "Q6", "value": "1"},
     {"key": "Q6-1", "value": "1"},
-    {"key": "Q7", "value": "3"},
+    {"key": "Q7", "value": "6"},
     {"key": "Q8", "value": "5"},
     {"key": "Q9", "value": "5"},
 ]
